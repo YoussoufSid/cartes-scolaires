@@ -34,6 +34,7 @@ input:focus,select:focus{outline:2px solid #1f5c3a55;border-color:var(--g2)}
 table{width:100%;border-collapse:collapse}th,td{padding:7px 6px;border-bottom:1px solid var(--line);text-align:start;font-size:14px}th{font-size:12px;color:var(--mut)}
 .ph{width:40px;height:40px;border-radius:8px;object-fit:cover;background:#e8f1eb;display:inline-flex;align-items:center;justify-content:center;font-weight:800;color:var(--g);cursor:pointer;border:1px solid var(--line)}
 .stu{display:flex;gap:10px;align-items:center;padding:8px 0;border-bottom:1px solid var(--line)}.stu .grow{flex:1;min-width:0;cursor:pointer}.stu .nm{font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tpls{display:flex;gap:10px;flex-wrap:wrap}.tp{border:2px solid var(--line);border-radius:12px;padding:6px;cursor:pointer;text-align:center;background:#fff}.tp.on{border-color:var(--g);background:#eaf4ee}.tpc canvas{display:block;margin:0 auto 4px}.chip.pal{display:inline-flex;gap:0;padding:0;overflow:hidden;border-radius:99px;width:54px;height:30px}.chip.pal span{flex:1}
 .cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:14px;justify-items:center}
 .cv{width:242px;height:153px;position:relative;zoom:1.35;background:#fbf7ec;border:.8px solid #c8aa50;border-radius:8px;overflow:hidden;font-family:Helvetica,Arial,sans-serif;direction:ltr;color:#000}
 .cv *{position:absolute}.cv .t{white-space:nowrap;line-height:1}
@@ -2763,7 +2764,7 @@ const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
 const esc=s=>String(s==null?"":s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 let LANG="ar";try{LANG=localStorage.getItem("cs_lang")||"ar"}catch(e){}
 const T=(fr,ar)=>LANG==="ar"?ar:fr;
-const DEF={nom:"",ligne1:"RÉPUBLIQUE DU MALI",devise:"Un Peuple - Un But - Une Foi",adresse:"",sous:"",titre:"Carte scolaire",annee:(()=>{const d=new Date(),y=d.getFullYear();return d.getMonth()>=8?y+"-"+(y+1):(y-1)+"-"+y})(),tel:"",color:"#0E4A32",accent:"#DEB028",flag:true,prefix:"",marks:true,directeur:"Le Directeur",logo:"",sign:"",cachet:"",next:1};
+const DEF={nom:"",ligne1:"RÉPUBLIQUE DU MALI",devise:"Un Peuple - Un But - Une Foi",adresse:"",sous:"",titre:"Carte scolaire",annee:(()=>{const d=new Date(),y=d.getFullYear();return d.getMonth()>=8?y+"-"+(y+1):(y-1)+"-"+y})(),tel:"",color:"#0E4A32",accent:"#DEB028",flag:true,prefix:"",marks:true,llang:"fr",tpl:"classic",type:"student",radius:8,pshape:"square",paper:"cream",directeur:"Le Directeur",logo:"",sign:"",cachet:"",next:1};
 let CFG={...DEF},ST=[],TAB="school",SEL=new Set(),META={ids:[],names:{},cur:""},CUR="";
 /* ---------- stockage (IndexedDB, repli mémoire) ---------- */
 let DB=null;function idb(){return new Promise(r=>{try{const q=indexedDB.open("cartes_scolaires",1);q.onupgradeneeded=()=>q.result.createObjectStore("kv");q.onsuccess=()=>{DB=q.result;r()};q.onerror=()=>r()}catch(e){r()}})}
@@ -2782,21 +2783,66 @@ const hasAr=s=>/[؀-ۿ]/.test(s||"");
 const rgb=h=>{h=(h||"#000").replace("#","");if(h.length===3)h=h.split("").map(c=>c+c).join("");const n=parseInt(h,16);return[n>>16&255,n>>8&255,n&255]};
 const dark=c=>c.map(v=>Math.round(v*.72));
 function fdate(v){if(!v)return"";if(/^\d{4}-\d{2}-\d{2}$/.test(v)){const[a,b,c]=v.split("-");return c+"/"+b+"/"+a}return v}
-function initials(n){return(n||"?").trim().split(/\s+/).map(w=>w[0]).join("").slice(0,2).toUpperCase()}
+function initials(n){const w=(n||"?").trim().split(/\s+/);if(hasAr(n))return w[0][0];return w.map(x=>x[0]).join("").slice(0,2).toUpperCase()}
 function pad(n,w){return String(n).padStart(w,"0")}
 function newMat(){const yr=(CFG.annee||"").slice(0,4)||new Date().getFullYear();const pre=(CFG.prefix||initials((CFG.nom||"EC").normalize("NFD").replace(/[\u0300-\u036f]/g,"")).replace(/[^A-Z]/g,"")||"EC")+"-"+yr+"-";let n=CFG.next||1;const used=new Set(ST.map(s=>s.mat));while(used.has(pre+pad(n,3)))n++;CFG.next=n+1;return pre+pad(n,3)}
 function fileToData(f,max){return new Promise((res,rej)=>{const fr=new FileReader();fr.onload=()=>{const im=new Image();im.onload=()=>{let w=im.width,h=im.height;const k=Math.min(1,max/Math.max(w,h));w=Math.round(w*k);h=Math.round(h*k);const c=document.createElement("canvas");c.width=w;c.height=h;const x=c.getContext("2d");x.drawImage(im,0,0,w,h);res({data:c.toDataURL("image/png"),w,h})};im.onerror=rej;im.src=fr.result};fr.onerror=rej;fr.readAsDataURL(f)})}
 function photoData(f){return new Promise((res,rej)=>{const fr=new FileReader();fr.onload=()=>{const im=new Image();im.onload=()=>{const S=260,c=document.createElement("canvas");c.width=S;c.height=S;const x=c.getContext("2d");const m=Math.min(im.width,im.height),sx=(im.width-m)/2,sy=(im.height-m)/2-(im.height>im.width?m*.08:0);x.fillStyle="#fff";x.fillRect(0,0,S,S);x.drawImage(im,sx,Math.max(0,sy),m,m,0,0,S,S);res(c.toDataURL("image/jpeg",.85))};im.onerror=rej;im.src=fr.result};fr.onerror=rej;fr.readAsDataURL(f)})}
-/* ---------- PDF : même dessin que la carte CSW ---------- */
+/* ---------- texte arabe dans le PDF (rendu canvas -> image) ---------- */
+const AS=4,PAD=4,FAM='"Segoe UI",Tahoma,"Noto Naskh Arabic","Noto Sans Arabic","DejaVu Sans",Arial,sans-serif',ARC=new Map(),_ac=document.createElement("canvas").getContext("2d");
+function arW(t,sz,b){sz*=.9;_ac.font=(b?"bold ":"")+(sz*AS)+"px "+FAM;return _ac.measureText(t).width/AS}
+function arImg(t,sz,b,col){sz*=.9;const k=t+"|"+sz+"|"+b+"|"+col;let r=ARC.get(k);if(r)return r;const c=document.createElement("canvas"),x=c.getContext("2d");x.font=(b?"bold ":"")+(sz*AS)+"px "+FAM;const w=x.measureText(t).width;c.width=Math.ceil(w)+PAD*2;c.height=Math.ceil(sz*AS*1.6);x.font=(b?"bold ":"")+(sz*AS)+"px "+FAM;x.fillStyle=col||"#000";x.textBaseline="alphabetic";x.textAlign="left";x.direction=/^[\s\d.,:;()\-\/]*[\u0600-\u06FF]/.test(t)?"rtl":"ltr";x.fillText(t,PAD,sz*AS*1.15);r={url:c.toDataURL("image/png"),w:c.width/AS,alias:"ar"+ARC.size};ARC.set(k,r);return r}
+function arPatch(d){const o={text:d.text.bind(d),tw:d.getTextWidth.bind(d),sp:d.splitTextToSize.bind(d)};const bold=()=>(d.getFont().fontStyle||"").indexOf("bold")>=0;
+ d.getTextWidth=t=>hasAr(t)?arW(t,d.getFontSize(),bold()):o.tw(t);
+ d.splitTextToSize=(t,w)=>{if(!hasAr(t))return o.sp(t,w);const L=[];let c="";t.split(/\s+/).forEach(wd=>{const n=c?c+" "+wd:wd;if(arW(n,d.getFontSize(),bold())>w&&c){L.push(c);c=wd}else c=n});if(c)L.push(c);return L};
+ d.text=(t,x,y,opt,tr)=>{opt=opt||{};if(Array.isArray(t)){if(!t.some(hasAr))return o.text(t,x,y,opt,tr);const lh=(opt.lineHeightFactor||1.15)*d.getFontSize();t.forEach((l,i)=>d.text(l,x,y+i*lh,opt));return d}
+  if(!hasAr(t))return o.text(t,x,y,opt,tr);const fs0=d.getFontSize(),sz=fs0*.9,r=arImg(t,fs0,bold(),d.getTextColor());const w=r.w-2*PAD/AS;let xx=x;if(opt.align==="center")xx=x-w/2;else if(opt.align==="right")xx=x-w;
+  d.addImage(r.url,"PNG",xx-PAD/AS,y-sz*1.15,r.w,sz*1.6,r.alias,"FAST");return d}}
 function cardName(d,name,x,y,w,fs0,fmin){d.setFont("helvetica","bold");let f=fs0;d.setFontSize(f);while(f>fmin&&d.getTextWidth(name)>w){f-=.25;d.setFontSize(f)}
  if(d.getTextWidth(name)<=w){d.text(name,x,y);return 1}
  f=Math.min(fs0,8.5);d.setFontSize(f);let L=d.splitTextToSize(name,w);while(L.length>2&&f>6){f-=.25;d.setFontSize(f);L=d.splitTextToSize(name,w)}
  d.text(L.slice(0,2),x,y-5.5,{lineHeightFactor:1.05});return 2}
-function lines(s){const dots="……………";return[["Né(e) le",s.naissance?fdate(s.naissance):dots],["à",s.lieu||dots],["Domicile",s.domicile||dots],["Classe",s.classe||dots]]}
-function cardPDF(d,s,x,y,cw,ch){const G=rgb(CFG.color),DG=dark(G),GOLD=rgb(CFG.accent);
- d.setFillColor(251,247,236);d.setDrawColor(200,170,80);d.setLineWidth(.8);d.roundedRect(x,y,cw,ch,8,8,"FD");
- d.setFillColor(...G);d.roundedRect(x,y,cw,46,8,8,"F");d.rect(x,y+20,cw,26,"F");
- if(CFG.flag)[[20,181,58],[252,209,22],[206,17,38]].forEach((c,j)=>{d.setFillColor(...c);d.rect(x+j*cw/3,y+46,cw/3,3,"F")});else{d.setFillColor(...GOLD);d.rect(x,y+46,cw,3,"F")}
+/* ---------- moteur de cartes : types, modèles, couleurs ---------- */
+const TYPES={student:{fr:"Carte scolaire",ar:"بطاقة تلميذ",ar4:"القسم",arp:"ولي الأمر",l4:"Classe",par:"PARENT / TUTEUR",n:["Élève","تلميذ"]},staff:{fr:"Carte du personnel",ar:"بطاقة موظف",ar4:"الوظيفة",arp:"للطوارئ",l4:"Fonction",par:"URGENCE",n:["Personnel","موظف"]},member:{fr:"Carte de membre",ar:"بطاقة عضوية",ar4:"المجموعة",arp:"للتواصل",l4:"Groupe",par:"CONTACT",n:["Membre","عضو"]},lib:{fr:"Carte de bibliothèque",ar:"بطاقة مكتبة",ar4:"القسم",arp:"للتواصل",l4:"Section",par:"CONTACT",n:["Bibliothèque","مكتبة"]}};
+const TPLS={classic:{o:"L",n:["Classique","كلاسيكي"]},wave:{o:"L",n:["Vague","موجة"]},side:{o:"L",n:["Latéral","جانبي"]},portrait:{o:"P",n:["Portrait","عمودي"]}};
+const PALS=[["Vert","#0E4A32","#DEB028"],["Bleu","#12356B","#E0B13A"],["Bordeaux","#6B1530","#D9B25F"],["Noir & or","#1C1C1C","#D4AF37"],["Violet","#4B2A7B","#E6B84C"],["Turquoise","#0B6E75","#F2B84B"],["Orange","#C2410C","#1F3A5F"],["Rouge","#B3261E","#F5C542"],["Marine","#0B2A4A","#7FC8F8"],["Ardoise","#37474F","#F2A93B"],["Rose","#A21C5B","#F5D17A"],["Brun","#5B3A1E","#E2B66B"]];
+const ty=()=>TYPES[CFG.type]||TYPES.student,rad=()=>CFG.radius==null?8:CFG.radius,isP=()=>(TPLS[CFG.tpl]||{}).o==="P",csz=()=>isP()?[153,242]:[242,153];
+function pal(){const G=rgb(CFG.color),GOLD=rgb(CFG.accent),DG=dark(G);const P={cream:[251,247,236],white:[255,255,255],tint:G.map(v=>Math.round(255-(255-v)*.07))}[CFG.paper||"cream"]||[251,247,236];return{G,GOLD,DG,P}}
+const AR_=()=>CFG.llang==="ar",ADM=()=>AR_()?"الإدارة":"ADMINISTRATION",TYP=()=>AR_()?ty().arp:ty().par,tdef=k=>AR_()?TYPES[k].ar:TYPES[k].fr;
+function lines(s){const dots="……………",a=AR_();return[[a?"تاريخ الميلاد":"Né(e) le",s.naissance?fdate(s.naissance):dots],[a?"مكان الميلاد":"à",s.lieu||dots],[a?"السكن":"Domicile",s.domicile||dots],[a?ty().ar4:ty().l4,s.classe||dots]]}
+/* ---------- images : chargement, masque de photo ---------- */
+const IMG=new Map();function loadImg(u){if(!u)return Promise.resolve();let e=IMG.get(u);if(!e){const im=new Image();e={im,p:new Promise(r=>{im.onload=im.onerror=r})};im.src=u;IMG.set(u,e)}return e.p}
+const MSK=new Map();
+function photoFor(s,bg){if(!s.photo)return null;const sh=CFG.pshape||"square";if(sh==="square")return s.photo;const k=s.id+"|"+sh+"|"+bg.join()+"|"+s.photo.length;let m=MSK.get(k);if(m)return m;const e=IMG.get(s.photo);if(!e||!e.im.naturalWidth)return s.photo;const S=260,c=document.createElement("canvas");c.width=S;c.height=S;const x=c.getContext("2d");x.fillStyle="rgb("+bg.join(",")+")";x.fillRect(0,0,S,S);x.beginPath();if(sh==="circle")x.arc(S/2,S/2,S/2,0,7);else{const R=S*.12;x.moveTo(R,0);x.arcTo(S,0,S,S,R);x.arcTo(S,S,0,S,R);x.arcTo(0,S,0,0,R);x.arcTo(0,0,S,0,R);x.closePath()}x.clip();x.drawImage(e.im,0,0,S,S);m=c.toDataURL("image/jpeg",.85);MSK.set(k,m);return m}
+async function prep(list){const us=new Set([CFG.logo,CFG.sign,CFG.cachet]);list.forEach(s=>{if(s.photo)us.add(s.photo)});await Promise.all([...us].map(loadImg));const bg=CFG.tpl==="side"?pal().G:pal().P;list.forEach(s=>{const m=photoFor(s,bg);if(m)us.add(m)});await Promise.all([...us].map(loadImg))}
+/* ---------- pinceau canvas (même API que jsPDF) pour l'aperçu fidèle ---------- */
+function CP(cv,S){const x=cv.getContext("2d");x.scale(S,S);const st={f:"#000",d:"#000",t:"#000",lw:1,fs:10,fb:false};const col=(a,b,c)=>b===undefined?`rgb(${a},${a},${a})`:`rgb(${a},${b},${c})`;const font=t=>{x.font=(st.fb?"bold ":"")+(t&&hasAr(t)?st.fs*.9:st.fs)+"px Helvetica,Arial,"+FAM};
+ const rr=(X,Y,W,H,R)=>{R=Math.min(R,W/2,H/2);x.beginPath();x.moveTo(X+R,Y);x.arcTo(X+W,Y,X+W,Y+H,R);x.arcTo(X+W,Y+H,X,Y+H,R);x.arcTo(X,Y+H,X,Y,R);x.arcTo(X,Y,X+W,Y,R);x.closePath()};
+ const paint=sty=>{if(sty&&sty.indexOf("F")>=0){x.fillStyle=st.f;x.fill()}if(!sty||sty.indexOf("S")>=0||sty.indexOf("D")>=0){x.strokeStyle=st.d;x.lineWidth=st.lw;x.stroke()}};
+ const o={setFillColor:(a,b,c)=>{st.f=col(a,b,c)},setDrawColor:(a,b,c)=>{st.d=col(a,b,c)},setTextColor:(a,b,c)=>{st.t=col(a,b,c)},setLineWidth:w=>{st.lw=w},setFont:(n,s)=>{st.fb=s==="bold"},setFontSize:z=>{st.fs=z},getFontSize:()=>st.fs,
+ getTextWidth:t=>{font(t);x.letterSpacing="0px";return x.measureText(t).width},
+ splitTextToSize:(t,w)=>{const L=[];let c="";String(t).split(/\s+/).forEach(wd=>{const n=c?c+" "+wd:wd;if(o.getTextWidth(n)>w&&c){L.push(c);c=wd}else c=n});if(c)L.push(c);return L},
+ text:(t,X,Y,op)=>{op=op||{};const ls=Array.isArray(t)?t:[t];x.fillStyle=st.t;x.textAlign=op.align||"left";x.textBaseline="alphabetic";try{x.letterSpacing=(op.charSpace||0)+"px"}catch(e){}const lh=(op.lineHeightFactor||1.15)*st.fs;ls.forEach((l,i)=>{font(l);x.fillText(l,X,Y+i*lh)});try{x.letterSpacing="0px"}catch(e){}},
+ rect:(X,Y,W,H,sty)=>{x.beginPath();x.rect(X,Y,W,H);paint(sty)},roundedRect:(X,Y,W,H,a,b,sty)=>{rr(X,Y,W,H,a);paint(sty)},circle:(X,Y,r,sty)=>{x.beginPath();x.arc(X,Y,r,0,7);paint(sty)},
+ line:(a,b,c,e)=>{x.beginPath();x.moveTo(a,b);x.lineTo(c,e);x.strokeStyle=st.d;x.lineWidth=st.lw;x.stroke()},
+ lines:(sg,X,Y,sc,sty,cl)=>{x.beginPath();x.moveTo(X,Y);let cx=X,cy=Y;sg.forEach(a=>{if(a.length===2){cx+=a[0];cy+=a[1];x.lineTo(cx,cy)}else{x.bezierCurveTo(cx+a[0],cy+a[1],cx+a[2],cy+a[3],cx+a[4],cy+a[5]);cx+=a[4];cy+=a[5]}});if(cl)x.closePath();paint(sty)},
+ addImage:(u,f,X,Y,W,H)=>{const e=IMG.get(u);if(e&&e.im.naturalWidth)x.drawImage(e.im,X,Y,W,H)},saveGraphicsState:()=>x.save(),restoreGraphicsState:()=>x.restore(),GState:function(q){this.o=q},setGState:g=>{x.globalAlpha=g.o.opacity}};return o}
+function cardCanvas(s,S){const[w,h]=csz(),dpr=Math.min(2,window.devicePixelRatio||1)*1.5,cv=document.createElement("canvas");cv.width=Math.round(w*S*dpr);cv.height=Math.round(h*S*dpr);cv.style.width=w*S+"px";cv.style.height=h*S+"px";cv.style.borderRadius="6px";cv.style.boxShadow="0 2px 8px #0003";drawCard(CP(cv,S*dpr),s,0,0,w,h);return cv}
+/* ---------- éléments de dessin partagés ---------- */
+function stripe(d,x,y,w,h,GOLD){if(CFG.flag)[[20,181,58],[252,209,22],[206,17,38]].forEach((c,j)=>{d.setFillColor(...c);d.rect(x+j*w/3,y,w/3+.05,h,"F")});else{d.setFillColor(...GOLD);d.rect(x,y,w,h,"F")}}
+function hdr(d,x,y,cw,R,G,GOLD,wave){d.setFillColor(...G);if(wave){d.roundedRect(x,y,cw,40,R,R,"F");d.rect(x,y+Math.min(20,R),cw,40-Math.min(20,R),"F");d.lines([[cw/3,16,2*cw/3,16,cw,0]],x,y+40,[1,1],"F",true);d.setDrawColor(...GOLD);d.setLineWidth(1.4);d.lines([[cw/3,16,2*cw/3,16,cw,0]],x,y+43.6,[1,1],"S",false)}else{d.roundedRect(x,y,cw,46,R,R,"F");d.rect(x,y+Math.min(20,R),cw,46-Math.min(20,R),"F")}}
+function photoBox(d,s,px,py,ps,G,bg,frame){const sh=CFG.pshape||"square",m=photoFor(s,bg);d.setDrawColor(...(frame||G));d.setLineWidth(1);
+ if(m){try{d.addImage(m,"JPEG",px,py,ps,ps)}catch(e){}}else{d.setFillColor(232,241,235);if(sh==="circle")d.circle(px+ps/2,py+ps/2,ps/2,"F");else if(sh==="rounded")d.roundedRect(px,py,ps,ps,6,6,"F");else d.rect(px,py,ps,ps,"F");d.setTextColor(...G);d.setFontSize(ps*.36);d.setFont("helvetica","bold");d.text(initials(s.nom),px+ps/2,py+ps/2+ps*.12,{align:"center"})}
+ if(sh==="circle")d.circle(px+ps/2,py+ps/2,ps/2+.5,"S");else if(sh==="rounded")d.roundedRect(px-1,py-1,ps+2,ps+2,7,7,"S");else d.rect(px-1,py-1,ps+2,ps+2,"S")}
+function qrBox(d,s,qx,qy,qs,G){const q=qrcode(0,"M");q.addData(s.mat||"-");q.make();const n=q.getModuleCount(),cell=qs/n;d.setDrawColor(...G);d.setLineWidth(.8);d.roundedRect(qx-3,qy-3,qs+6,qs+6,3,3,"S");d.setFillColor(0);for(let r=0;r<n;r++)for(let c=0;c<n;c++)if(q.isDark(r,c))d.rect(qx+c*cell,qy+r*cell,cell+.05,cell+.05,"F")}
+function fitTxt(d,t,x,y,w,f0,fmin,style,col,op){d.setFont("helvetica",style||"bold");let f=f0;d.setFontSize(f);while(f>fmin&&d.getTextWidth(t)>w){f-=.25;d.setFontSize(f)}d.setTextColor(...col);d.text(t,x,y,op)}
+function lv(d,k,v,x,y,kw,mx,fs0,DG,x2){d.setFont("helvetica","bold");d.setFontSize(7);d.setTextColor(...DG);d.text(k.toUpperCase(),x,y,{charSpace:.1});let fs=fs0;d.setTextColor(0);d.setFontSize(fs);while(fs>5.5&&kw+d.getTextWidth(v)>mx){fs-=.25;d.setFontSize(fs)}d.text(v,x+kw,y);d.setDrawColor(205,220,210);d.setLineWidth(.3);d.line(x,y+3.2,x2,y+3.2)}
+function tl2(d,lab,val,c2,by,w,GOLD,ly,vy){d.setFont("helvetica","bold");d.setFontSize(5.2);d.setTextColor(...GOLD);d.text(lab,c2,by+ly,{align:"center",charSpace:.5});let f=7.2;d.setFont("helvetica","bold");d.setFontSize(f);while(f>5&&d.getTextWidth(val)>w){f-=.2;d.setFontSize(f)}d.setTextColor(255);d.text(val,c2,by+vy,{align:"center"})}
+function titlePill(d,tt,cx,y,maxW,GOLD,DG,left){d.setFont("helvetica","bold");let f=7.4;d.setFontSize(f);const W=()=>d.getTextWidth(tt)+tt.length*.35+16;while(f>4.5&&W()>maxW){f-=.2;d.setFontSize(f)}const tw=W();const x0=left?cx:cx-tw/2;d.setFillColor(...GOLD);d.roundedRect(x0,y,tw,11,5.5,5.5,"F");d.setTextColor(...DG);d.text(tt,x0+tw/2,y+7.8,{align:"center",charSpace:.35})}
+const ttl=()=>((CFG.titre||tdef(CFG.type))+" · "+(AR_()?"":"Année ")+(AR_()?"\u2066"+CFG.annee+"\u2069":CFG.annee)).toUpperCase();
+function drawA(d,s,x,y,cw,ch,wave){const{G,GOLD,DG,P}=pal(),R=rad(),LN=lines(s),TY=ty();
+ d.setFillColor(...P);d.setDrawColor(...GOLD.map(v=>Math.round(v*.9)));d.setLineWidth(.8);d.roundedRect(x,y,cw,ch,R,R,"FD");
+ hdr(d,x,y,cw,R,G,GOLD,wave);if(!wave)stripe(d,x,y+46,cw,3,GOLD);
  d.setFillColor(255,255,255);d.circle(x+22,y+23,17.2,"F");
  if(CFG.logo){try{d.addImage(CFG.logo,"PNG",x+5.5,y+6.5,33,33,"logo","FAST")}catch(e){}}else{d.setTextColor(...G);d.setFont("helvetica","bold");d.setFontSize(13);d.text(initials(CFG.nom||"EC"),x+22,y+27,{align:"center"})}
  const cx=x+cw/2+22;
@@ -2805,61 +2851,78 @@ function cardPDF(d,s,x,y,cw,ch){const G=rgb(CFG.color),DG=dark(G),GOLD=rgb(CFG.a
  two(CFG.ligne1,6.4,CFG.devise,4.4,y+12);
  if(CFG.adresse){d.setFont("helvetica","bold");let f=6.6;d.setFontSize(f);while(f>4.5&&d.getTextWidth(CFG.adresse)>180){f-=.2;d.setFontSize(f)}d.setTextColor(...GOLD);d.text(CFG.adresse,cx,y+20,{align:"center",charSpace:.3})}
  two((CFG.nom||"NOM DE L'ÉCOLE").toUpperCase(),7.2,CFG.sous,4.8,y+27.5);
- {const tt=((CFG.titre||"Carte scolaire")+" · Année "+CFG.annee).toUpperCase();d.setFont("helvetica","bold");d.setFontSize(7.4);const tw=d.getTextWidth(tt)+tt.length*.35+16;d.setFillColor(...GOLD);d.roundedRect(cx-tw/2,y+31,tw,11,5.5,5.5,"F");d.setTextColor(20,66,40);d.text(tt,cx,y+38.8,{align:"center",charSpace:.35})}
+ {const tt=ttl();d.setFont("helvetica","bold");d.setFontSize(7.4);const tw=d.getTextWidth(tt)+tt.length*.35+16;d.setFillColor(...GOLD);d.roundedRect(cx-tw/2,y+31,tw,11,5.5,5.5,"F");d.setTextColor(...DG);d.text(tt,cx,y+38.8,{align:"center",charSpace:.35})}
  if(CFG.logo){try{d.saveGraphicsState();d.setGState(new d.GState({opacity:.07}));d.addImage(CFG.logo,"PNG",x+cw/2-34,y+60,68,68,"logo","FAST");d.restoreGraphicsState()}catch(e){}}
- const px=x+10,py=y+56,ps=50;d.setDrawColor(...G);d.setLineWidth(1);d.rect(px-1,py-1,ps+2,ps+2);
- if(s.photo){try{d.addImage(s.photo,"JPEG",px,py,ps,ps)}catch(e){}}else{d.setFillColor(232,241,235);d.rect(px,py,ps,ps,"F");d.setTextColor(...G);d.setFontSize(18);d.setFont("helvetica","bold");d.text(initials(s.nom),px+ps/2,py+ps/2+6,{align:"center"})}
+ const px=x+10,py=y+56,ps=50;photoBox(d,s,px,py,ps,G,P);
  d.setFillColor(...G);d.roundedRect(px-1,py+ps+4,ps+2,10,5,5,"F");d.setTextColor(255);d.setFont("helvetica","bold");{let f=7.4;d.setFontSize(f);while(f>4.8&&d.getTextWidth(s.mat||"")+(s.mat||"").length*.2>ps-2){f-=.2;d.setFontSize(f)}d.text(s.mat||"",px+ps/2,py+ps+11.3,{align:"center",charSpace:.2})}
  d.setTextColor(20);const nl=cardName(d,s.nom||"",x+76,y+62,114,11.5,7.5);if(nl<2){d.setDrawColor(...GOLD);d.setLineWidth(1.2);d.line(x+76,y+65,x+98,y+65)}
- lines(s).forEach(([k,v],j)=>{const yy=y+76+j*11;let fs=10;d.setFont("helvetica","bold");d.setFontSize(7.2);d.setTextColor(...DG);d.text(k.toUpperCase(),x+76,yy,{charSpace:.1});const kw=40;d.setFont("helvetica","bold");d.setTextColor(0);d.setFontSize(fs);while(fs>6&&kw+d.getTextWidth(v)>104){fs-=.25;d.setFontSize(fs)}d.text(v,x+76+kw,yy);d.setDrawColor(205,220,210);d.setLineWidth(.3);d.line(x+76,yy+3.2,x+cw-12,yy+3.2)});
+ LN.forEach(([k,v],j)=>{const yy=y+76+j*11;let fs=10;d.setFont("helvetica","bold");d.setFontSize(7.2);d.setTextColor(...DG);d.text(k.toUpperCase(),x+76,yy,{charSpace:.1});const kw=40;d.setFont("helvetica","bold");d.setTextColor(0);d.setFontSize(fs);while(fs>6&&kw+d.getTextWidth(v)>104){fs-=.25;d.setFontSize(fs)}d.text(v,x+76+kw,yy);d.setDrawColor(205,220,210);d.setLineWidth(.3);d.line(x+76,yy+3.2,x+cw-12,yy+3.2)});
  const q=qrcode(0,"M");q.addData(s.mat||"-");q.make();const n=q.getModuleCount(),qs=32,cell=qs/n,qx=x+cw-qs-12,qy=y+54;d.setDrawColor(...G);d.setLineWidth(.8);d.roundedRect(qx-3,qy-3,qs+6,qs+6,3,3,"S");d.setFillColor(0);for(let r=0;r<n;r++)for(let c=0;c<n;c++)if(q.isDark(r,c))d.rect(qx+c*cell,qy+r*cell,cell+.05,cell+.05,"F");
  d.setFont("helvetica","normal");d.setFontSize(5.6);d.setTextColor(110);d.text(CFG.directeur||"Le Directeur",x+cw-28.5,y+95,{align:"center"});
  try{if(CFG.sign)d.addImage(CFG.sign,"PNG",x+cw-68,y+106,46,11,"sg","FAST");if(CFG.cachet)d.addImage(CFG.cachet,"PNG",x+cw-42,y+98,25,25,"ct","FAST")}catch(e){}
- const by=y+ch-24;d.setFillColor(...G);d.roundedRect(x,by,cw,24,8,8,"F");d.rect(x,by,cw,12,"F");
- if(CFG.flag)[[20,181,58],[252,209,22],[206,17,38]].forEach((c,j)=>{d.setFillColor(...c);d.rect(x+j*cw/3,by,cw/3,2,"F")});else{d.setFillColor(...GOLD);d.rect(x,by,cw,2,"F")}
+ const by=y+ch-24;d.setFillColor(...G);d.roundedRect(x,by,cw,24,R,R,"F");d.rect(x,by,cw,12,"F");
+ stripe(d,x,by,cw,2,GOLD);
  d.setDrawColor(255,255,255);d.setLineWidth(.4);d.line(x+cw/2,by+6,x+cw/2,by+20);
  const tl=(lab,val,c2)=>{d.setFont("helvetica","bold");d.setFontSize(5.2);d.setTextColor(...GOLD);d.text(lab,c2,by+10,{align:"center",charSpace:.5});let f=7.2;d.setFont("helvetica","bold");d.setFontSize(f);while(f>5&&d.getTextWidth(val)>cw/2-12){f-=.2;d.setFontSize(f)}d.setTextColor(255);d.text(val,c2,by+19,{align:"center"})};
- tl("ADMINISTRATION",CFG.tel||"……………",x+cw/4);tl("PARENT / TUTEUR",s.tel||"……………",x+3*cw/4)}
-function buildPDF(list){const d=new window.jspdf.jsPDF({unit:"pt",format:"a4",compress:true});const cw=242,ch=153,mx=40,my=36,gx=31,gy=14;
- list.forEach((s,i)=>{const k=i%8;if(i&&k===0)d.addPage();const x=mx+(k%2)*(cw+gx),y=my+Math.floor(k/2)*(ch+gy);cardPDF(d,s,x,y,cw,ch);
+ tl(ADM(),CFG.tel||"……………",x+cw/4);tl(TYP(),s.tel||"……………",x+3*cw/4)}
+function drawS(d,s,x,y,cw,ch){const{G,GOLD,DG,P}=pal(),R=rad(),LN=lines(s),TY=ty(),BW=72,RX=x+BW+10,RW=cw-BW-20,W=[255,255,255];
+ d.setFillColor(...P);d.roundedRect(x,y,cw,ch,R,R,"F");
+ d.setFillColor(...G);d.roundedRect(x,y,BW+R*2+2,ch,R,R,"F");d.setFillColor(...P);d.rect(x+BW,y+1,R*2+3,ch-2,"F");
+ if(CFG.flag)[[20,181,58],[252,209,22],[206,17,38]].forEach((c,j)=>{d.setFillColor(...c);d.rect(x+BW-3,y+j*ch/3,3,ch/3+.05,"F")});else{d.setFillColor(...GOLD);d.rect(x+BW-3,y,3,ch,"F")}
+ d.setFillColor(...W);d.circle(x+BW/2-1.5,y+31,22,"F");
+ if(CFG.logo){try{d.addImage(CFG.logo,"PNG",x+BW/2-1.5-19,y+12,38,38,"logo","FAST")}catch(e){}}else{d.setTextColor(...G);d.setFont("helvetica","bold");d.setFontSize(15);d.text(initials(CFG.nom||"EC"),x+BW/2-1.5,y+36,{align:"center"})}
+ photoBox(d,s,x+10,y+62,50,G,G,W);
+ d.setFillColor(...W);d.roundedRect(x+7,y+119,BW-13,10,5,5,"F");fitTxt(d,s.mat||"",x+7+(BW-13)/2,y+126.2,BW-19,7.2,4.8,"bold",G,{align:"center"});
+ fitTxt(d,CFG.ligne1||"",RX,y+12,RW,5.8,4,"bold",DG);
+ if(CFG.devise)fitTxt(d,CFG.devise,RX,y+18,RW,4.6,3.5,"normal",[110,110,110]);
+ fitTxt(d,(CFG.nom||"NOM DE L'ÉCOLE").toUpperCase(),RX,y+29,RW,8.8,5,"bold",G);
+ let yy=y+36;if(CFG.sous){fitTxt(d,CFG.sous,RX,yy,RW,5.4,4,"normal",[90,90,90]);yy+=7}if(CFG.adresse){fitTxt(d,CFG.adresse,RX,yy,RW,5.4,4,"bold",GOLD.map(v=>Math.round(v*.75)))}
+ titlePill(d,ttl(),RX,y+48,112,GOLD,DG,true);
+ qrBox(d,s,x+cw-42,y+47,30,G);
+ d.setTextColor(20);const nl=cardName(d,s.nom||"",RX,y+75,110,11,7);if(nl<2){d.setDrawColor(...GOLD);d.setLineWidth(1.2);d.line(RX,y+78,RX+22,y+78)}
+ LN.forEach(([k,v],j)=>lv(d,k,v,RX,y+91+10*j,41,RW,9.5,DG,x+cw-10));
+ const by=y+ch-20;d.setFillColor(...G);d.roundedRect(x+BW-20,by,cw-BW+20,20,R,R,"F");d.rect(x+BW-20,by,cw-BW+20,10,"F");stripe(d,x+BW-3,by,cw-BW+3,2,GOLD);
+ d.setDrawColor(...W);d.setLineWidth(.4);d.line(x+BW+(cw-BW)/2,by+6,x+BW+(cw-BW)/2,by+17);
+ tl2(d,ADM(),CFG.tel||"……………",x+BW+(cw-BW)/4,by,(cw-BW)/2-8,GOLD,9,17);tl2(d,TYP(),s.tel||"……………",x+BW+3*(cw-BW)/4,by,(cw-BW)/2-8,GOLD,9,17);
+ d.setDrawColor(...GOLD.map(v=>Math.round(v*.9)));d.setLineWidth(.8);d.roundedRect(x,y,cw,ch,R,R,"S")}
+function drawP(d,s,x,y,cw,ch){const{G,GOLD,DG,P}=pal(),R=rad(),LN=lines(s),TY=ty(),W=[255,255,255],cx=x+cw/2;
+ d.setFillColor(...P);d.setDrawColor(...GOLD.map(v=>Math.round(v*.9)));d.setLineWidth(.8);d.roundedRect(x,y,cw,ch,R,R,"FD");
+ d.setFillColor(...G);d.roundedRect(x,y,cw,58,R,R,"F");d.rect(x,y+Math.min(20,R),cw,58-Math.min(20,R),"F");stripe(d,x,y+58,cw,3,GOLD);
+ fitTxt(d,CFG.ligne1||"",cx,y+8,138,5.4,3.8,"bold",W,{align:"center"});
+ d.setFillColor(...W);d.circle(cx,y+24,13.5,"F");
+ if(CFG.logo){try{d.addImage(CFG.logo,"PNG",cx-12,y+12,24,24,"logo","FAST")}catch(e){}}else{d.setTextColor(...G);d.setFont("helvetica","bold");d.setFontSize(10.5);d.text(initials(CFG.nom||"EC"),cx,y+28,{align:"center"})}
+ fitTxt(d,(CFG.nom||"NOM DE L'ÉCOLE").toUpperCase(),cx,y+45,140,7.4,4.5,"bold",W,{align:"center"});
+ const sub=[CFG.sous,CFG.adresse].filter(Boolean).join(" · ");if(sub)fitTxt(d,sub,cx,y+53,140,5,3.6,"bold",GOLD,{align:"center"});
+ titlePill(d,ttl(),cx,y+66,cw-14,GOLD,DG,false);
+ const ps=62;photoBox(d,s,cx-ps/2,y+84,ps,G,P);
+ if(CFG.logo){try{d.saveGraphicsState();d.setGState(new d.GState({opacity:.06}));d.addImage(CFG.logo,"PNG",x+cw/2-50,y+110,100,100,"logo","FAST");d.restoreGraphicsState()}catch(e){}}
+ try{if(CFG.cachet)d.addImage(CFG.cachet,"PNG",x+8,y+94,28,28,"ct","FAST");if(CFG.sign)d.addImage(CFG.sign,"PNG",x+4,y+112,36,9,"sg","FAST")}catch(e){}
+ d.setFont("helvetica","normal");d.setFontSize(5);d.setTextColor(110);d.text(CFG.directeur||"Le Directeur",x+22,y+128,{align:"center"});
+ qrBox(d,s,x+cw-9-30-3,y+97,30,G);
+ d.setTextColor(20);d.setFont("helvetica","bold");let f=11;d.setFontSize(f);const nm=s.nom||"";while(f>7&&d.getTextWidth(nm)>136){f-=.25;d.setFontSize(f)}
+ let nl=1;if(d.getTextWidth(nm)>136){f=8.5;d.setFontSize(f);const L=d.splitTextToSize(nm,136).slice(0,2);d.text(L,cx,y+156,{align:"center",lineHeightFactor:1.05});nl=2}else d.text(nm,cx,y+160,{align:"center"});
+ const py=y+(nl>1?169:167);d.setFillColor(...G);d.roundedRect(cx-36,py,72,10,5,5,"F");fitTxt(d,s.mat||"",cx,py+7.2,66,7.2,4.8,"bold",W,{align:"center"});
+ LN.forEach(([k,v],j)=>lv(d,k,v,x+12,y+192+9.4*j,38,cw-24,9.5,DG,x+cw-12));
+ const by=y+ch-20;d.setFillColor(...G);d.roundedRect(x,by,cw,20,R,R,"F");d.rect(x,by,cw,10,"F");stripe(d,x,by,cw,2,GOLD);d.setDrawColor(...W);d.setLineWidth(.4);d.line(cx,by+6,cx,by+17);
+ tl2(d,ADM(),CFG.tel||"……………",x+cw/4,by,cw/2-8,GOLD,9,17);tl2(d,TYP(),s.tel||"……………",x+3*cw/4,by,cw/2-8,GOLD,9,17)}
+function drawCard(d,s,x,y,cw,ch){({wave:()=>drawA(d,s,x,y,cw,ch,true),side:()=>drawS(d,s,x,y,cw,ch),portrait:()=>drawP(d,s,x,y,cw,ch)}[CFG.tpl]||(()=>drawA(d,s,x,y,cw,ch,false)))()}
+async function buildPDF(list){await prep(list);const d=new window.jspdf.jsPDF({unit:"pt",format:"a4",compress:true});arPatch(d);const[cw,ch]=csz(),P=isP(),mx=40,my=36,gx=P?28:31,gy=P?22:14,cols=P?3:2,per=P?9:8;
+ list.forEach((s,i)=>{const k=i%per;if(i&&k===0)d.addPage();const x=mx+(k%cols)*(cw+gx),y=my+Math.floor(k/cols)*(ch+gy);drawCard(d,s,x,y,cw,ch);
   if(CFG.marks){d.setDrawColor(150);d.setLineWidth(.3);[[x,y,-1,-1],[x+cw,y,1,-1],[x,y+ch,-1,1],[x+cw,y+ch,1,1]].forEach(([a,b,sx,sy])=>{d.line(a+sx*2,b,a+sx*7,b);d.line(a,b+sy*2,a,b+sy*7)})}});return d.output("blob")}
+
 async function saveBlob(name,blob){
  try{if(window.claude&&claude.use){const dl=await claude.use("downloads");if(dl){await dl.save({filename:name,data:blob});return true}}}catch(e){}
  try{const u=URL.createObjectURL(blob),a=document.createElement("a");a.href=u;a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),8000);return true}catch(e){toast(T("Téléchargement impossible dans ce mode — ouvrez le fichier .html sur l'ordinateur","التنزيل غير ممكن هنا — افتح ملف التطبيق على الحاسوب"));return false}}
-/* ---------- aperçu HTML (approximatif) ---------- */
-const _cx=document.createElement("canvas").getContext("2d");function tw(t,sz,b){_cx.font=(b?"bold ":"")+sz+"px Helvetica, Arial, sans-serif";return _cx.measureText(t).width}
-function fit1(t,sz,mn,w,b){let f=sz;while(f>mn&&tw(t,f,b)>w)f-=.25;return f}
-function fitTwo(a,fa,b,fb,w){let f1=fa,f2=fb;const g=()=>tw(a,f1,1)+(b?tw(b,f2,0)+4:0);while(g()>w&&f1>4.5){f1-=.25;f2-=.15}return [f1,f2]}
-function cardHTML(s){const G=CFG.color,GD="rgb("+dark(rgb(CFG.color)).join(",")+")",A=CFG.accent;
- const q=qrcode(0,"M");q.addData(s.mat||"-");q.make();const qsvg=q.createSvgTag({cellSize:2,margin:0,scalable:true});
- const stripes=CFG.flag?`<span style="left:0;top:0;width:33.4%;height:100%;background:#14b53a"></span><span style="left:33.3%;top:0;width:33.4%;height:100%;background:#fcd116"></span><span style="left:66.6%;top:0;width:33.4%;height:100%;background:#ce1126"></span>`:`<span style="inset:0;background:${A}"></span>`;
- const L=lines(s).map(([k,v],j)=>`<span class="t" style="left:76px;top:${71+j*11}px;font-size:7px;font-weight:700;color:${GD};letter-spacing:.1px">${esc(k.toUpperCase())}</span><span class="t" style="left:116px;top:${76-fit1(v,10,6,64,1)*.8+j*11}px;font-size:${fit1(v,10,6,64,1)}px;font-weight:700">${esc(v)}</span><span style="left:76px;top:${79+j*11}px;width:154px;height:.4px;background:#cddcd2"></span>`).join("");
- const nm=s.nom||"";let nf=fit1(nm,11.5,7.5,114,1),two=tw(nm,nf,1)>114;if(two)nf=8.5;
- return `<div class="cv"><span style="left:0;top:0;width:242px;height:46px;background:${G}"></span><span style="left:0;top:46px;width:242px;height:3px">${stripes}</span>
- <span style="left:4.8px;top:5.8px;width:34.4px;height:34.4px;border-radius:50%;background:#fff;overflow:hidden;display:flex;align-items:center;justify-content:center">${CFG.logo?`<img src="${CFG.logo}" style="position:static;width:33px;height:33px;object-fit:contain">`:`<b style="position:static;color:${G};font-size:13px">${esc(initials(CFG.nom||"EC"))}</b>`}</span>
- ${(()=>{const[f1,f2]=fitTwo(CFG.ligne1||"",6.4,CFG.devise||"",4.4,182);return `<span class="t" style="left:44px;width:198px;top:${12-f1*.8}px;text-align:center;color:#fff;font-size:${f1}px;font-weight:700">${esc(CFG.ligne1)} <em style="font-weight:400;font-size:${f2}px;opacity:.85;font-style:normal">${esc(CFG.devise)}</em></span>`})()}
- <span class="t" style="left:44px;width:198px;top:${20-fit1(CFG.adresse||"",6.6,4.5,180,1)*.8}px;text-align:center;color:${A};font-size:${fit1(CFG.adresse||"",6.6,4.5,180,1)}px;font-weight:700;letter-spacing:.3px">${esc(CFG.adresse)}</span>
- ${(()=>{const n=(CFG.nom||"NOM DE L'ÉCOLE").toUpperCase(),[f1,f2]=fitTwo(n,7.2,CFG.sous||"",4.8,182);return `<span class="t" style="left:44px;width:198px;top:${27.5-f1*.8}px;text-align:center;color:#fff;font-size:${f1}px;font-weight:700">${esc(n)} <em style="font-weight:400;font-size:${f2}px;opacity:.85;font-style:normal">${esc(CFG.sous)}</em></span>`})()}
- <span class="t" style="left:50px;width:186px;top:31px;height:11px;border-radius:6px;background:${A};text-align:center;color:#144228;font-size:7px;font-weight:700;line-height:11px;letter-spacing:.3px;overflow:hidden">${esc(((CFG.titre||"Carte scolaire")+" · Année "+CFG.annee).toUpperCase())}</span>
- <span style="left:9px;top:55px;width:52px;height:52px;border:1px solid ${G};background:#e8f1eb;display:flex;align-items:center;justify-content:center;overflow:hidden">${s.photo?`<img src="${s.photo}" style="position:static;width:50px;height:50px;object-fit:cover">`:`<b style="position:static;color:${G};font-size:18px">${esc(initials(s.nom))}</b>`}</span>
- <span style="left:9px;top:110px;width:52px;height:10px;border-radius:5px;background:${G};color:#fff;font-size:6.6px;font-weight:700;text-align:center;line-height:10px">${esc(s.mat||"")}</span>
- <span style="left:76px;top:${two?50:62-nf*.8}px;width:116px;font-size:${nf}px;font-weight:700;line-height:1.05;color:#141414;overflow:hidden;max-height:${two?20:14}px">${esc(nm)}</span>
- ${two?"":`<span style="left:76px;top:64px;width:22px;height:1.2px;background:${A}"></span>`}${L}
- <span style="left:195px;top:51px;width:38px;height:38px;border:.8px solid ${G};border-radius:3px;padding:3px">${qsvg.replace("<svg",'<svg style="position:static;width:100%;height:100%"')}</span>
- <span class="t" style="left:${242-28.5-20}px;width:40px;text-align:center;top:92px;font-size:5.6px;color:#6e6e6e">${esc(CFG.directeur)}</span>
- ${CFG.cachet?`<img src="${CFG.cachet}" style="left:200px;top:98px;width:25px;height:25px;object-fit:contain">`:""}${CFG.sign?`<img src="${CFG.sign}" style="left:174px;top:106px;width:46px;height:11px;object-fit:contain">`:""}
- <span style="left:0;top:129px;width:242px;height:24px;background:${G};border-radius:0 0 8px 8px"></span><span style="left:0;top:129px;width:242px;height:2px">${stripes}</span>
- <span style="left:121px;top:135px;width:.5px;height:14px;background:#fff"></span>
- <span class="t" style="left:0;width:121px;text-align:center;top:136px;font-size:5.2px;font-weight:700;color:${A};letter-spacing:.5px">ADMINISTRATION</span><span class="t" style="left:0;width:121px;text-align:center;top:143px;font-size:7px;font-weight:700;color:#fff">${esc(CFG.tel||"……………")}</span>
- <span class="t" style="left:121px;width:121px;text-align:center;top:136px;font-size:5.2px;font-weight:700;color:${A};letter-spacing:.5px">PARENT / TUTEUR</span><span class="t" style="left:121px;width:121px;text-align:center;top:143px;font-size:7px;font-weight:700;color:#fff">${esc(s.tel||"……………")}</span></div>`}
 /* ---------- vues ---------- */
+const SAMPLE={id:"smp",nom:"Aminata Traoré",classe:"6ème A",mat:"CSA-2026-001",naissance:"2012-03-12",lieu:"Bamako",domicile:"Badalabougou",tel:"+223 70 00 00 00",photo:""};
+async function thumbs(){const keep=CFG.tpl;await prep([SAMPLE]);$$("#tpls .tp").forEach(el=>{CFG.tpl=el.dataset.tp;const cv=cardCanvas(SAMPLE,.55);cv.style.boxShadow="none";const h=el.querySelector(".tpc");h.innerHTML="";h.appendChild(cv)});CFG.tpl=keep}
 function setTitles(){document.documentElement.lang=LANG;document.documentElement.dir=LANG==="ar"?"rtl":"ltr";$("#ttl").textContent=T("Cartes scolaires","بطاقات التلاميذ");$("#stt").textContent=T("Pour n'importe quelle école · fonctionne sans internet","لأي مدرسة · يعمل بدون إنترنت");
  $("#nav").innerHTML=[["school",T("1. École","١. المدرسة")],["students",T("2. Élèves","٢. التلاميذ")+" ("+ST.length+")"],["print",T("3. Aperçu & PDF","٣. المعاينة وPDF")]].map(([k,l])=>`<button data-t="${k}" class="${TAB===k?"on":""}">${l}</button>`).join("");$$("#nav [data-t]").forEach(b=>b.onclick=()=>{TAB=b.dataset.t;render()})}
 function render(){schoolBar();setTitles();instBtn();const ib=$("#inst");if(ib)ib.onclick=async()=>{if(DP){DP.prompt();await DP.userChoice;DP=null;ib.style.display="none"}else toast(T("iPhone : bouton Partager ⬆ puis « Sur l'écran d'accueil »","آيفون: زر المشاركة ⬆ ثم «إضافة إلى الشاشة الرئيسية»"))};({school:vSchool,students:vStudents,print:vPrint})[TAB]();window.scrollTo(0,0)}
 function imgField(id,lab,val){return `<div><label>${lab}</label><div class="imgbox"><img id="${id}_i" ${val?`src="${val}"`:'style="visibility:hidden"'}><div><input type="file" accept="image/*" id="${id}"><div class="row" style="margin-top:4px">${val?`<button class="btn r" data-rm="${id}" style="padding:4px 10px">${T("Retirer","إزالة")}</button>`:""}</div></div></div></div>`}
 function vSchool(){const c=CFG;$("#app").innerHTML=`
 <div class="card"><h2>${T("Identité de l'école","بيانات المدرسة")}</h2>
- <div class="note">${T("Écrivez avec l'alphabet latin : les lettres arabes ne s'impriment pas dans le PDF.","اكتب بالحروف اللاتينية: الحروف العربية لا تظهر في ملف PDF.")}</div>
+ <div class="note">${T("Vous pouvez écrire en français ou en arabe : les deux s'impriment sur la carte.","يمكنك الكتابة بالفرنسية أو العربية: كلاهما يظهر على البطاقة.")}</div>
  <label>${T("Nom de l'école","اسم المدرسة")}</label><input type="text" id="f_nom" value="${esc(c.nom)}" placeholder="Ex. : Complexe Scolaire Al Amal">
  <div class="g2"><div><label>${T("Complément (quartier, ville)","تكملة (الحي، المدينة)")}</label><input type="text" id="f_sous" value="${esc(c.sous)}" placeholder="Ex. : Badalabougou - Bamako"></div><div><label>${T("Ligne officielle (adresse, CAP…)","سطر رسمي (العنوان، المديرية…)")}</label><input type="text" id="f_adresse" value="${esc(c.adresse)}" placeholder="Ex. : C. A. P de Faladié - Rive droite"></div></div>
  <div class="g2"><div><label>${T("En-tête (pays)","رأس البطاقة (الدولة)")}</label><input type="text" id="f_ligne1" value="${esc(c.ligne1)}"></div><div><label>${T("Devise","الشعار الوطني")}</label><input type="text" id="f_devise" value="${esc(c.devise)}"></div></div>
@@ -2871,7 +2934,22 @@ function vSchool(){const c=CFG;$("#app").innerHTML=`
  <div class="g3"><div><label>${T("Couleur principale","اللون الأساسي")}</label><input type="color" id="f_color" value="${c.color}" style="width:100%;height:42px;border:1px solid var(--line);border-radius:10px"></div><div><label>${T("Couleur dorée","اللون الثانوي")}</label><input type="color" id="f_accent" value="${c.accent}" style="width:100%;height:42px;border:1px solid var(--line);border-radius:10px"></div><div><label>${T("Bandes du drapeau du Mali","شريط علم مالي")}</label><select id="f_flag"><option value="1" ${c.flag?"selected":""}>${T("Oui","نعم")}</option><option value="0" ${!c.flag?"selected":""}>${T("Non (trait doré)","لا (خط ذهبي)")}</option></select></div></div>
  <div class="g3" style="margin-top:6px">${imgField("f_logo",T("Logo de l'école (carré)","شعار المدرسة (مربع)"),c.logo)}${imgField("f_sign",T("Signature (facultatif)","التوقيع (اختياري)"),c.sign)}${imgField("f_cachet",T("Cachet (facultatif)","الختم (اختياري)"),c.cachet)}</div>
  <div class="sub" style="margin-top:6px">${T("Conseil : PNG à fond transparent pour la signature et le cachet.","نصيحة: صورة PNG بخلفية شفافة للتوقيع والختم.")}</div></div>
+<div class="card"><h2>${T("Type et modèle de carte","نوع البطاقة وتصميمها")}</h2>
+ <label>${T("Type de carte","نوع البطاقة")}</label><div class="chips">${Object.entries(TYPES).map(([k,v])=>`<button class="chip ${c.type===k?"on":""}" data-ty="${k}">${T(v.n[0],v.n[1])}</button>`).join("")}</div>
+ <label>${T("Langue des intitulés de la carte","لغة عناوين حقول البطاقة")}</label><div class="chips"><button class="chip ${c.llang!=="ar"?"on":""}" data-ll="fr">Français</button><button class="chip ${c.llang==="ar"?"on":""}" data-ll="ar">العربية</button></div>
+ <label>${T("Modèle","التصميم")}</label><div class="tpls" id="tpls">${Object.entries(TPLS).map(([k,v])=>`<div class="tp ${c.tpl===k?"on":""}" data-tp="${k}"><div class="tpc"></div><div class="sub">${T(v.n[0],v.n[1])}</div></div>`).join("")}</div>
+ <label>${T("Palette de couleurs","لوحة الألوان")}</label><div class="chips">${PALS.map((p,i)=>`<button class="chip pal" data-pal="${i}" title="${p[0]}"><span style="background:${p[1]}"></span><span style="background:${p[2]}"></span></button>`).join("")}</div>
+ <div class="g3" style="margin-top:6px"><div><label>${T("Fond de la carte","خلفية البطاقة")}</label><select id="f_paper"><option value="cream" ${c.paper==="cream"?"selected":""}>${T("Crème","كريمي")}</option><option value="white" ${c.paper==="white"?"selected":""}>${T("Blanc","أبيض")}</option><option value="tint" ${c.paper==="tint"?"selected":""}>${T("Teinté","مظلل بلون المدرسة")}</option></select></div>
+ <div><label>${T("Coins","الزوايا")}</label><select id="f_rad">${[[0,T("Droits","حادة")],[4,T("Légers","خفيفة")],[8,T("Arrondis","مستديرة")],[14,T("Très arrondis","شديدة الاستدارة")]].map(([v,l])=>`<option value="${v}" ${rad()===v?"selected":""}>${l}</option>`).join("")}</select></div>
+ <div><label>${T("Forme de la photo","شكل الصورة")}</label><select id="f_psh"><option value="square" ${c.pshape==="square"?"selected":""}>${T("Carrée","مربعة")}</option><option value="rounded" ${c.pshape==="rounded"?"selected":""}>${T("Arrondie","بحواف مستديرة")}</option><option value="circle" ${c.pshape==="circle"?"selected":""}>${T("Ronde","دائرية")}</option></select></div></div>
+ <div class="sub" style="margin-top:8px">${T("Le modèle « Latéral » n'affiche pas la signature ni le cachet.","التصميم «جانبي» لا يعرض التوقيع والختم.")}</div></div>
 <button class="btn p" id="nx" style="width:100%;padding:13px">${T("Continuer → Élèves","التالي ← التلاميذ")}</button>`;
+ $$("[data-ty]").forEach(b=>b.onclick=()=>{const old=CFG.type;CFG.type=b.dataset.ty;if(!CFG.titre||CFG.titre===TYPES[old].fr||CFG.titre===TYPES[old].ar)CFG.titre=tdef(CFG.type);save();vSchool()});
+ $$("[data-ll]").forEach(b=>b.onclick=()=>{const was=CFG.titre===tdef(CFG.type);CFG.llang=b.dataset.ll;if(was||!CFG.titre)CFG.titre=tdef(CFG.type);save();vSchool()});
+ $$("[data-tp]").forEach(b=>b.onclick=()=>{CFG.tpl=b.dataset.tp;save();vSchool()});
+ $$("[data-pal]").forEach(b=>b.onclick=()=>{const p=PALS[+b.dataset.pal];CFG.color=p[1];CFG.accent=p[2];save();vSchool()});
+ $("#f_paper").onchange=e=>{CFG.paper=e.target.value;save();thumbs()};$("#f_rad").onchange=e=>{CFG.radius=+e.target.value;save();thumbs()};$("#f_psh").onchange=e=>{CFG.pshape=e.target.value;save();thumbs()};
+ thumbs();
  ["nom","sous","adresse","ligne1","devise","titre","annee","tel","prefix","directeur"].forEach(k=>$("#f_"+k).oninput=e=>{CFG[k]=e.target.value;save()});
  $("#f_color").oninput=e=>{CFG.color=e.target.value;save()};$("#f_accent").oninput=e=>{CFG.accent=e.target.value;save()};$("#f_marks").onchange=e=>{CFG.marks=e.target.value==="1";save()};$("#f_flag").onchange=e=>{CFG.flag=e.target.value==="1";save()};
  [["f_logo","logo",500],["f_sign","sign",600],["f_cachet","cachet",400]].forEach(([id,k,mx])=>{$("#"+id).onchange=async e=>{const f=e.target.files[0];if(!f)return;try{const r=await fileToData(f,mx);CFG[k]=r.data;save();vSchool()}catch(x){toast(T("Image illisible","تعذر قراءة الصورة"))}}});
@@ -2893,8 +2971,8 @@ let Q="",QC="";
 function vStudents(){setTitles();const cls=[...new Set(ST.map(s=>s.classe).filter(Boolean))].sort((a,b)=>a.localeCompare(b,"fr"));
  const list=ST.filter(s=>(!QC||s.classe===QC)&&(!Q||nz(s.nom+" "+s.mat).includes(nz(Q)))).sort((a,b)=>(a.nom||"").localeCompare(b.nom||"","fr",{sensitivity:"base"}));
  const noPh=ST.filter(s=>!s.photo).length;
- $("#app").innerHTML=`<div class="card"><div class="row"><button class="btn p" id="add">＋ ${T("Ajouter un élève","إضافة تلميذ")}</button><label class="btn" style="margin:0">📥 ${T("Importer Excel","استيراد Excel")}<input type="file" id="imp" accept=".xlsx,.xls,.csv" style="display:none"></label><button class="btn" id="tpl">📄 ${T("Modèle Excel","نموذج Excel")}</button></div>
- <div class="sub" style="margin-top:8px">${T("Colonnes reconnues : Nom, Classe, Matricule, Naissance, Lieu, Domicile, Téléphone. Le matricule est créé automatiquement s'il manque.","الأعمدة المعروفة: الاسم، القسم، رقم التسجيل، الميلاد، المكان، العنوان، الهاتف. يُنشأ رقم التسجيل تلقائيًا إن غاب.")}</div></div>
+ $("#app").innerHTML=`<div class="card"><div class="row"><button class="btn p" id="add">＋ ${T("Ajouter un élève","إضافة تلميذ")}</button><label class="btn" style="margin:0">📥 ${T("Importer Excel","استيراد Excel")}<input type="file" id="imp" accept=".xlsx,.xls,.csv" style="display:none"></label><label class="btn" style="margin:0">📸 ${T("Photos en lot","صور جماعية")}<input type="file" id="bph" accept="image/*" multiple style="display:none"></label><button class="btn" id="tpl">📄 ${T("Modèle Excel","نموذج Excel")}</button></div>
+ <div class="sub" style="margin-top:8px">${T("Photos en lot : nommez chaque photo avec le matricule ou le nom de l'élève (ex. CSA-2026-001.jpg).","صور جماعية: سمِّ كل صورة برقم التسجيل أو اسم التلميذ (مثل CSA-2026-001.jpg).")}</div><div class="sub" style="margin-top:4px">${T("Colonnes reconnues : Nom, Classe, Matricule, Naissance, Lieu, Domicile, Téléphone. Le matricule est créé automatiquement s'il manque.","الأعمدة المعروفة: الاسم، القسم، رقم التسجيل، الميلاد، المكان، العنوان، الهاتف. يُنشأ رقم التسجيل تلقائيًا إن غاب.")}</div></div>
  <div class="card"><div class="row"><input type="text" id="q" placeholder="${T("Rechercher…","بحث…")}" value="${esc(Q)}" style="flex:1;min-width:140px"><select id="qc" style="max-width:200px"><option value="">${T("Toutes les classes","كل الأقسام")}</option>${cls.map(c=>`<option ${c===QC?"selected":""}>${esc(c)}</option>`).join("")}</select></div>
  <div class="sub" style="margin:8px 0">${list.length} / ${ST.length} · ${T("sans photo","بلا صورة")} : ${noPh}</div>
  ${list.map(s=>`<div class="stu"><span class="ph" data-ph="${s.id}">${s.photo?`<img src="${s.photo}" style="width:40px;height:40px;border-radius:8px;object-fit:cover">`:"📷"}</span><div class="grow" data-ed="${s.id}"><div class="nm">${esc(s.nom)}</div><div class="sub">${esc(s.classe||"—")} · ${esc(s.mat)}</div></div></div>`).join("")||`<div class="sub" style="padding:14px;text-align:center">${T("Aucun élève","لا يوجد تلاميذ")}</div>`}
@@ -2902,6 +2980,7 @@ function vStudents(){setTitles();const cls=[...new Set(ST.map(s=>s.classe).filte
  <div class="card"><h2>${T("Sauvegarde","النسخ الاحتياطي")}</h2><div class="row"><button class="btn" id="bk">💾 ${T("Sauvegarder tout","حفظ نسخة احتياطية")}</button><label class="btn" style="margin:0">♻️ ${T("Restaurer","استعادة")}<input type="file" id="rs" accept=".json" style="display:none"></label>${ST.length?`<button class="btn" id="xl">📊 ${T("Liste Excel","قائمة Excel")}</button>`:""}</div><div class="sub" style="margin-top:6px">${T("Les données sont sur cet appareil uniquement : faites une sauvegarde régulièrement et avant de désinstaller.","البيانات على هذا الجهاز فقط: احفظ نسخة احتياطية بانتظام وقبل حذف التطبيق.")}</div></div>
  ${ST.length?`<button class="btn p" id="nx" style="width:100%;padding:13px">${T("Continuer → Aperçu & PDF","التالي ← المعاينة وPDF")}</button>`:""}`;
  $("#bk").onclick=backup;$("#rs").onchange=e=>{const f=e.target.files[0];if(f)restore(f)};if($("#xl"))$("#xl").onclick=exportXlsx;
+ $("#bph").onchange=async e=>{const fs=[...e.target.files];let ok=0,no=[];for(const f of fs){const b=nz(f.name.replace(/\.[^.]+$/,""));const st=ST.find(s=>nz(s.mat)===b)||ST.find(s=>nz(s.nom)===b)||ST.find(s=>b.length>3&&(nz(s.nom).includes(b)||b.includes(nz(s.nom))));if(!st){no.push(f.name);continue}try{st.photo=await photoData(f);ok++}catch(x){no.push(f.name)}}save();vStudents();toast(T(ok+" photo(s) associée(s)"+(no.length?" · "+no.length+" non reconnue(s)":""),ok+" صورة رُبطت"+(no.length?" · "+no.length+" لم تُعرف":"")));if(no.length)setTimeout(()=>alert(T("Non reconnues :\n","لم تُعرف:\n")+no.slice(0,15).join("\n")),400)};
  $("#add").onclick=()=>edit(null);$("#imp").onchange=e=>{const f=e.target.files[0];if(f)importFile(f)};$("#tpl").onclick=template;
  $("#q").oninput=e=>{Q=e.target.value;vStudents();const i=$("#q");i.focus();i.setSelectionRange(Q.length,Q.length)};$("#qc").onchange=e=>{QC=e.target.value;vStudents()};
  $$("[data-ed]").forEach(x=>x.onclick=()=>edit(x.dataset.ed));
@@ -2923,15 +3002,16 @@ function edit(id){const s=id?ST.find(z=>z.id===id):{id:Math.random().toString(36
 let PC="",PF="";
 function vPrint(){const cls=[...new Set(ST.map(s=>s.classe).filter(Boolean))].sort((a,b)=>a.localeCompare(b,"fr"));
  const list=ST.filter(s=>(!PC||s.classe===PC)&&(PF===""||(PF==="1"?!!s.photo:!s.photo))).sort((a,b)=>(a.nom||"").localeCompare(b.nom||"","fr",{sensitivity:"base"}));
- const ar=[CFG.nom,CFG.sous,CFG.adresse,CFG.ligne1,CFG.devise,CFG.titre,CFG.directeur,...list.flatMap(s=>[s.nom,s.lieu,s.domicile,s.classe])].some(hasAr);
+ 
  $("#app").innerHTML=`<div class="card"><div class="row"><select id="pc" style="flex:1;min-width:160px"><option value="">${T("Toute l'école","كل المدرسة")} (${ST.length})</option>${cls.map(c=>`<option ${c===PC?"selected":""}>${esc(c)}</option>`).join("")}</select><select id="pf" style="max-width:170px"><option value="">${T("Tous","الكل")}</option><option value="1" ${PF==="1"?"selected":""}>${T("Avec photo","بصورة فقط")}</option><option value="0" ${PF==="0"?"selected":""}>${T("Sans photo","بلا صورة")}</option></select><button class="btn gold" id="pdf" ${list.length?"":"disabled"}>🖨 PDF (${list.length})</button></div>
- <div class="sub" style="margin-top:8px">${T("Format A4 · 8 cartes par page (85×54 mm) · imprimez à 100 % (taille réelle).","A4 · ٨ بطاقات في الصفحة (85×54 ملم) · اطبع بالحجم الفعلي 100%.")}</div>
- ${ar?`<div class="note warn">${T("Des lettres arabes ont été détectées : elles n'apparaîtront pas dans le PDF. Écrivez ces champs en lettres latines.","اكتشفت حروفًا عربية: لن تظهر في ملف PDF. اكتب هذه الحقول بحروف لاتينية.")}</div>`:""}
+ <div class="sub" style="margin-top:8px">${T("Format A4 · 8 cartes par page (85×54 mm, 9 en mode portrait) · imprimez à 100 % (taille réelle).","A4 · ٨ بطاقات في الصفحة (85×54 ملم) · اطبع بالحجم الفعلي 100%.")}</div>
+ 
  ${!CFG.nom?`<div class="note warn">${T("Indiquez le nom de l'école (étape 1).","اكتب اسم المدرسة (الخطوة ١).")}</div>`:""}</div>
- <div class="cards">${list.slice(0,60).map(cardHTML).join("")||`<div class="sub">${T("Aucun élève","لا يوجد تلاميذ")}</div>`}</div>${list.length>60?`<div class="sub" style="text-align:center;margin-top:10px">${T("Aperçu limité aux 60 premières cartes — le PDF contient tout.","المعاينة تعرض أول ٦٠ بطاقة — ملف PDF يشمل الكل.")}</div>`:""}
- <div class="sub" style="text-align:center;margin-top:10px">${T("L'aperçu est approximatif ; le PDF est la référence.","المعاينة تقريبية؛ ملف PDF هو المرجع.")}</div>`;
+ <div class="cards" id="cvs">${list.length?"":`<div class="sub">${T("Aucun élève","لا يوجد تلاميذ")}</div>`}</div>${list.length>60?`<div class="sub" style="text-align:center;margin-top:10px">${T("Aperçu limité aux 60 premières cartes — le PDF contient tout.","المعاينة تعرض أول ٦٠ بطاقة — ملف PDF يشمل الكل.")}</div>`:""}
+ <div class="sub" style="text-align:center;margin-top:10px">${T("L'aperçu est identique au PDF.","المعاينة مطابقة لملف PDF.")}</div>`;
+(async()=>{const sub=list.slice(0,60);await prep(sub);const box=$("#cvs");if(!box)return;sub.forEach(s=>box.appendChild(cardCanvas(s,1.35)))})();
  $("#pc").onchange=e=>{PC=e.target.value;vPrint()};$("#pf").onchange=e=>{PF=e.target.value;vPrint()};
- $("#pdf").onclick=async()=>{const b=$("#pdf");b.disabled=true;await new Promise(r=>setTimeout(r,30));try{const blob=buildPDF(list);const ok=await saveBlob("cartes_"+((CFG.nom||"ecole")+"_"+(PC||"tous")).normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/\W+/g,"_")+".pdf",blob);if(ok)toast(T("PDF prêt","الملف جاهز"))}catch(e){toast(T("Erreur PDF : ","خطأ في PDF: ")+e.message)}b.disabled=false}}
+ $("#pdf").onclick=async()=>{const b=$("#pdf");b.disabled=true;await new Promise(r=>setTimeout(r,30));try{const blob=await buildPDF(list);const ok=await saveBlob("cartes_"+((CFG.nom||"ecole")+"_"+(PC||"tous")).normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/\W+/g,"_")+".pdf",blob);if(ok)toast(T("PDF prêt","الملف جاهز"))}catch(e){toast(T("Erreur PDF : ","خطأ في PDF: ")+e.message)}b.disabled=false}}
 /* ---------- installation (PWA) ---------- */
 let DP=null;const isIOS=/iPad|iPhone|iPod/.test(navigator.userAgent),standalone=matchMedia("(display-mode: standalone)").matches||navigator.standalone;
 function instBtn(){const b=$("#inst");if(!b||standalone||!/^https?:/.test(location.protocol)||window.AndroidBridge){return}if(DP||isIOS){b.style.display="";b.textContent="⬇ "+T("Installer","تثبيت")}}
