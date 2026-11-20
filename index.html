@@ -2804,7 +2804,7 @@ function cardName(d,name,x,y,w,fs0,fmin){d.setFont("helvetica","bold");let f=fs0
  d.text(L.slice(0,2),x,y-5.5,{lineHeightFactor:1.05});return 2}
 /* ---------- moteur de cartes : types, modèles, couleurs ---------- */
 const TYPES={student:{fr:"Carte scolaire",ar:"بطاقة تلميذ",ar4:"القسم",arp:"ولي الأمر",l4:"Classe",par:"PARENT / TUTEUR",n:["Élève","تلميذ"]},staff:{fr:"Carte du personnel",ar:"بطاقة موظف",ar4:"الوظيفة",arp:"للطوارئ",l4:"Fonction",par:"URGENCE",n:["Personnel","موظف"]},member:{fr:"Carte de membre",ar:"بطاقة عضوية",ar4:"المجموعة",arp:"للتواصل",l4:"Groupe",par:"CONTACT",n:["Membre","عضو"]},lib:{fr:"Carte de bibliothèque",ar:"بطاقة مكتبة",ar4:"القسم",arp:"للتواصل",l4:"Section",par:"CONTACT",n:["Bibliothèque","مكتبة"]}};
-const TPLS={classic:{o:"L",n:["Classique","كلاسيكي"]},wave:{o:"L",n:["Vague","موجة"]},side:{o:"L",n:["Latéral","جانبي"]},portrait:{o:"P",n:["Portrait","عمودي"]}};
+const TPLS={classic:{o:"L",n:["Classique","كلاسيكي"]},wave:{o:"L",n:["Vague","موجة"]},side:{o:"L",n:["Latéral","جانبي"]},portrait:{o:"P",n:["Portrait","عمودي"]},member:{o:"L",n:["Adhésion","عضوية"]},gold:{o:"L",n:["Or & vague","ذهبي"]},amber:{o:"L",n:["Orange","برتقالي"]},badge:{o:"P",n:["Badge","شارة"]},arc:{o:"P",n:["Arc","قوس"]},diag:{o:"P",n:["Diagonal","قطري"]}};
 const PALS=[["Vert","#0E4A32","#DEB028"],["Bleu","#12356B","#E0B13A"],["Bordeaux","#6B1530","#D9B25F"],["Noir & or","#1C1C1C","#D4AF37"],["Violet","#4B2A7B","#E6B84C"],["Turquoise","#0B6E75","#F2B84B"],["Orange","#C2410C","#1F3A5F"],["Rouge","#B3261E","#F5C542"],["Marine","#0B2A4A","#7FC8F8"],["Ardoise","#37474F","#F2A93B"],["Rose","#A21C5B","#F5D17A"],["Brun","#5B3A1E","#E2B66B"]];
 const ty=()=>TYPES[CFG.type]||TYPES.student,rad=()=>CFG.radius==null?8:CFG.radius,isP=()=>(TPLS[CFG.tpl]||{}).o==="P",csz=()=>isP()?[153,242]:[242,153];
 function pal(){const G=rgb(CFG.color),GOLD=rgb(CFG.accent),DG=dark(G);const P={cream:[251,247,236],white:[255,255,255],tint:G.map(v=>Math.round(255-(255-v)*.07))}[CFG.paper||"cream"]||[251,247,236];return{G,GOLD,DG,P}}
@@ -2814,7 +2814,7 @@ function lines(s){const dots="……………",a=AR_();return[[a?"تاريخ ا�
 const IMG=new Map();function loadImg(u){if(!u)return Promise.resolve();let e=IMG.get(u);if(!e){const im=new Image();e={im,p:new Promise(r=>{im.onload=im.onerror=r})};im.src=u;IMG.set(u,e)}return e.p}
 const MSK=new Map();
 function photoFor(s,bg){if(!s.photo)return null;const sh=CFG.pshape||"square";if(sh==="square")return s.photo;const k=s.id+"|"+sh+"|"+bg.join()+"|"+s.photo.length;let m=MSK.get(k);if(m)return m;const e=IMG.get(s.photo);if(!e||!e.im.naturalWidth)return s.photo;const S=260,c=document.createElement("canvas");c.width=S;c.height=S;const x=c.getContext("2d");x.fillStyle="rgb("+bg.join(",")+")";x.fillRect(0,0,S,S);x.beginPath();if(sh==="circle")x.arc(S/2,S/2,S/2,0,7);else{const R=S*.12;x.moveTo(R,0);x.arcTo(S,0,S,S,R);x.arcTo(S,S,0,S,R);x.arcTo(0,S,0,0,R);x.arcTo(0,0,S,0,R);x.closePath()}x.clip();x.drawImage(e.im,0,0,S,S);m=c.toDataURL("image/jpeg",.85);MSK.set(k,m);return m}
-async function prep(list){const us=new Set([CFG.logo,CFG.sign,CFG.cachet]);list.forEach(s=>{if(s.photo)us.add(s.photo)});await Promise.all([...us].map(loadImg));const bg=CFG.tpl==="side"?pal().G:pal().P;list.forEach(s=>{const m=photoFor(s,bg);if(m)us.add(m)});await Promise.all([...us].map(loadImg))}
+async function prep(list){const us=new Set([CFG.logo,CFG.sign,CFG.cachet]);list.forEach(s=>{if(s.photo)us.add(s.photo)});await Promise.all([...us].map(loadImg));const bg=CFG.tpl==="side"?pal().G:CFG.tpl==="member"?[255,255,255]:pal().P;list.forEach(s=>{const m=photoFor(s,bg);if(m)us.add(m)});await Promise.all([...us].map(loadImg))}
 /* ---------- pinceau canvas (même API que jsPDF) pour l'aperçu fidèle ---------- */
 function CP(cv,S){const x=cv.getContext("2d");x.scale(S,S);const st={f:"#000",d:"#000",t:"#000",lw:1,fs:10,fb:false};const col=(a,b,c)=>b===undefined?`rgb(${a},${a},${a})`:`rgb(${a},${b},${c})`;const font=t=>{x.font=(st.fb?"bold ":"")+(t&&hasAr(t)?st.fs*.9:st.fs)+"px Helvetica,Arial,"+FAM};
  const rr=(X,Y,W,H,R)=>{R=Math.min(R,W/2,H/2);x.beginPath();x.moveTo(X+R,Y);x.arcTo(X+W,Y,X+W,Y+H,R);x.arcTo(X+W,Y+H,X,Y+H,R);x.arcTo(X,Y+H,X,Y,R);x.arcTo(X,Y,X+W,Y,R);x.closePath()};
@@ -2905,7 +2905,83 @@ function drawP(d,s,x,y,cw,ch){const{G,GOLD,DG,P}=pal(),R=rad(),LN=lines(s),TY=ty
  LN.forEach(([k,v],j)=>lv(d,k,v,x+12,y+187.5+9.2*j,38,cw-24,9.5,DG,x+cw-12));
  const by=y+ch-20;d.setFillColor(...G);d.roundedRect(x,by,cw,20,R,R,"F");d.rect(x,by,cw,10,"F");stripe(d,x,by,cw,2,GOLD);d.setDrawColor(...W);d.setLineWidth(.4);d.line(cx,by+6,cx,by+17);
  tl2(d,ADM(),CFG.tel||"……………",x+cw/4,by,cw/2-8,GOLD,9,17);tl2(d,TYP(),s.tel||"……………",x+3*cw/4,by,cw/2-8,GOLD,9,17)}
-function drawCard(d,s,x,y,cw,ch){({wave:()=>drawA(d,s,x,y,cw,ch,true),side:()=>drawS(d,s,x,y,cw,ch),portrait:()=>drawP(d,s,x,y,cw,ch)}[CFG.tpl]||(()=>drawA(d,s,x,y,cw,ch,false)))()}
+/* ---------- nouveaux modèles inspirés des références ---------- */
+function logoC(d,cx,cy,r,G){d.setFillColor(255,255,255);d.circle(cx,cy,r,"F");if(CFG.logo){try{d.addImage(CFG.logo,"PNG",cx-r+1.5,cy-r+1.5,2*r-3,2*r-3,"logo","FAST")}catch(e){}}else{d.setTextColor(...G);d.setFont("helvetica","bold");d.setFontSize(r*.8);d.text(initials(CFG.nom||"EC"),cx,cy+r*.28,{align:"center"})}}
+function poly(d,pts,sty){const a=pts[0],r=pts.slice(1);d.lines(r.map((p,i)=>[p[0]-(i?r[i-1][0]:a[0]),p[1]-(i?r[i-1][1]:a[1])]),a[0],a[1],[1,1],sty||"F",true)}
+function waveB(d,x,y,cw,ch,col,w0,w1){const R=rad(),m=ch-R-2;w0=Math.min(w0,m);w1=Math.min(w1,m);d.setFillColor(...col);d.roundedRect(x,y+ch-2*R-1,cw,2*R+1,R,R,"F");const k=(w1-w0)*.5;d.lines([[cw*.3,k-14,cw*.7,k+14,cw,w1-w0],[0,ch-R-w1],[-cw,0]],x,y+w0,[1,1],"F",true)}
+function waveT(d,x,y,cw,col,e0,e1){const R=rad();e0=Math.max(e0,R+2);e1=Math.max(e1,R+2);d.setFillColor(...col);d.roundedRect(x,y,cw,2*R+1,R,R,"F");const k=(e0-e1)*.5;d.lines([[cw,0],[0,e1-R],[-cw*.3,k-14,-cw*.7,k+14,-cw,e0-e1]],x,y+R,[1,1],"F",true)}
+function rowC(d,k,v,x,y,kw,mx,fs0,x2,kc,vc,lc){d.setFont("helvetica","bold");d.setFontSize(6.4);d.setTextColor(...kc);d.text(k.toUpperCase(),x,y,{charSpace:.1});fitTxt(d,v,x+kw,y,mx-kw,fs0,5.2,"bold",vc);d.setDrawColor(...lc);d.setLineWidth(.3);d.line(x,y+3,x2,y+3)}
+const LB=()=>AR_()?["الاسم","الرقم"]:["Nom","Matricule"];
+function rows(s,idx){const L=lines(s);return[[LB()[1],s.mat||"……………"],...L].filter((_,i)=>idx.includes(i))}
+function drawM(d,s,x,y,cw,ch){const{G,GOLD,DG,P}=pal(),R=rad(),W=[255,255,255],L=lines(s),lb=LB(),cx=x+143;
+ d.setFillColor(...P);d.setDrawColor(...G);d.setLineWidth(.8);d.roundedRect(x,y,cw,ch,R,R,"FD");
+ d.setFillColor(...G);d.roundedRect(x,y+62,cw,ch-62,R,R,"F");d.rect(x,y+62,cw,R+2,"F");
+ logoC(d,x+27,y+30,20,G);d.setDrawColor(...G);d.setLineWidth(1);d.circle(x+27,y+30,20.5,"S");
+ fitTxt(d,CFG.ligne1||"",cx,y+10,170,5.6,3.8,"bold",DG,{align:"center"});
+ fitTxt(d,(CFG.nom||"NOM DE L'ÉCOLE").toUpperCase(),cx,y+23,178,9.5,5,"bold",G,{align:"center"});
+ const sub=[CFG.sous,CFG.adresse].filter(Boolean).join(" · ");if(sub)fitTxt(d,sub,cx,y+31,178,5.4,3.6,"bold",[90,90,90],{align:"center"});
+ const tt=ttl();d.setFont("helvetica","bold");let f=10.5;d.setFontSize(f);while(f>5&&d.getTextWidth(tt)>100){f-=.25;d.setFontSize(f)}const tw=d.getTextWidth(tt);d.setTextColor(...DG);d.text(tt,cx,y+50,{align:"center"});
+ d.setDrawColor(...GOLD);d.setLineWidth(1);d.line(x+58,y+46.5,cx-tw/2-7,y+46.5);d.line(cx+tw/2+7,y+46.5,x+cw-10,y+46.5);d.setFillColor(...GOLD);[[cx-tw/2-9,y+46.5],[cx+tw/2+9,y+46.5]].forEach(([a,b])=>poly(d,[[a-2.5,b],[a,b-2.5],[a+2.5,b],[a,b+2.5]],"F"));
+ d.setFillColor(...W);d.roundedRect(x+8,y+69,66,66,5,5,"F");photoBox(d,s,x+10,y+71,62,G,W,W);
+ const F=[[lb[0],s.nom||""],[L[0][0],L[0][1]],[L[3][0],L[3][1]],[lb[1],s.mat||"……………"]];
+ F.forEach(([k,v],j)=>{const fy=y+68+j*19.7;d.setFillColor(...W);d.setDrawColor(20,20,20);d.setLineWidth(.9);d.roundedRect(x+82,fy,cw-92,16.5,4,4,"FD");d.setFont("helvetica","bold");d.setFontSize(6.3);d.setTextColor(...DG);d.text(k.toUpperCase(),x+89,fy+10.2,{charSpace:.1});fitTxt(d,v,x+89+40,fy+10.5,cw-92-14-40,9,5.2,"bold",[0,0,0])});
+ d.setFont("helvetica","normal");d.setFontSize(5.4);d.setTextColor(...W);d.text(CFG.directeur||"Le Directeur",x+41,y+144,{align:"center"});if(CFG.tel)d.text(CFG.tel,x+cw-10,y+148.5,{align:"right"})}
+function drawG(d,s,x,y,cw,ch){const{G,GOLD,DG,P}=pal(),R=rad(),W=[255,255,255],dg=GOLD.map(v=>Math.round(v*.82));
+ d.setFillColor(...P);d.setDrawColor(...GOLD.map(v=>Math.round(v*.9)));d.setLineWidth(.8);d.roundedRect(x,y,cw,ch,R,R,"FD");
+ waveT(d,x,y,cw,GOLD,28,15);waveT(d,x,y,cw,G,22,9);waveB(d,x,y,cw,ch,GOLD,ch-30,ch-14);waveB(d,x,y,cw,ch,G,ch-24,ch-8);
+ d.setFillColor(...P);d.circle(x+50,y+78,33,"F");photoBox(d,s,x+20,y+48,60,G,P,GOLD);d.setDrawColor(...GOLD);d.setLineWidth(2.4);if((CFG.pshape||"square")==="circle")d.circle(x+50,y+78,31,"S");
+ logoC(d,x+101,y+35,9,G);
+ fitTxt(d,(CFG.nom||"NOM DE L'ÉCOLE").toUpperCase(),x+114,y+37,x+cw-12-(x+114),7.4,4.4,"bold",DG);
+ fitTxt(d,ttl(),x+92,y+55,140,14,6,"bold",dg);
+ fitTxt(d,s.nom||"",x+92,y+69,140,11,6.5,"bold",[20,20,20]);
+ rows(s,[0,1,3,4]).forEach(([k,v],j)=>rowC(d,k,v,x+92,y+81+j*10.5,46,138,9,x+cw-12,DG,[0,0,0],[205,205,205]));
+ d.setFont("helvetica","bold");d.setFontSize(5.8);d.setTextColor(...W);if(CFG.tel)d.text(CFG.tel,x+16,y+ch-6.5)}
+function drawB(d,s,x,y,cw,ch){const{G,GOLD,DG,P}=pal(),R=rad(),W=[255,255,255];
+ d.setFillColor(...P);d.setDrawColor(...GOLD.map(v=>Math.round(v*.9)));d.setLineWidth(.8);d.roundedRect(x,y,cw,ch,R,R,"FD");
+ waveB(d,x,y,cw,ch,GOLD,ch-50,ch-30);waveB(d,x,y,cw,ch,G,ch-43,ch-20);
+ photoBox(d,s,x+12,y+14,56,G,P,GOLD);qrBox(d,s,x+25,y+78,22,G);
+ logoC(d,x+99,y+20,10,G);d.setDrawColor(...GOLD);d.setLineWidth(1);d.circle(x+99,y+20,10.4,"S");
+ fitTxt(d,(CFG.nom||"NOM DE L'ÉCOLE").toUpperCase(),x+114,y+22.5,x+cw-10-(x+114),9,4.6,"bold",[20,20,20]);
+ d.setFillColor(...GOLD);d.rect(x+88,y+34,cw-98,13,"F");fitTxt(d,ttl(),x+88+(cw-98)/2,y+43,cw-110,8.6,5,"bold",DG,{align:"center"});
+ fitTxt(d,s.nom||"",x+88,y+60,cw-98,11.5,6.5,"bold",G);
+ rows(s,[0,1,3,4]).forEach(([k,v],j)=>rowC(d,k,v,x+88,y+72+j*10,46,cw-98,8.8,x+cw-10,DG,[0,0,0],[205,205,205]));
+ d.setFont("helvetica","bold");d.setFontSize(5.8);d.setTextColor(...W);if(CFG.tel)d.text(CFG.tel,x+cw-12,y+ch-7,{align:"right"})}
+function drawL(d,s,x,y,cw,ch){const{G,GOLD,DG,P}=pal(),R=rad(),W=[255,255,255],cx=x+cw/2;
+ d.setFillColor(...P);d.setDrawColor(...GOLD.map(v=>Math.round(v*.9)));d.setLineWidth(.8);d.roundedRect(x,y,cw,ch,R,R,"FD");
+ waveB(d,x,y,cw,ch,GOLD,ch-96,ch-112);waveB(d,x,y,cw,ch,G,ch-90,ch-106);
+ d.setFillColor(...W);d.roundedRect(cx-14,y+5,28,5,2.5,2.5,"F");d.setDrawColor(200,200,200);d.setLineWidth(.4);d.roundedRect(cx-14,y+5,28,5,2.5,2.5,"S");
+ logoC(d,cx,y+27,13,G);d.setDrawColor(...G);d.setLineWidth(1);d.circle(cx,y+27,13.4,"S");
+ fitTxt(d,(CFG.nom||"NOM DE L'ÉCOLE").toUpperCase(),cx,y+49,140,7.4,4.4,"bold",G,{align:"center"});
+ titlePill(d,ttl(),cx,y+54,cw-14,GOLD,DG,false);
+ photoBox(d,s,cx-31,y+72,62,G,P,G);
+ fitTxt(d,s.nom||"",cx,y+168,136,11,6.5,"bold",W,{align:"center"});
+ rows(s,[0,1,3,4]).forEach(([k,v],j)=>rowC(d,k,v,x+14,y+183+j*9.6,46,cw-28,8.6,x+cw-14,GOLD,W,[255,255,255,]));
+ const by=y+ch-18;d.setFillColor(...GOLD);d.roundedRect(x,by,cw,18,R,R,"F");d.rect(x,by,cw,9,"F");fitTxt(d,CFG.tel||CFG.adresse||"",cx,by+11.5,136,6.8,4.4,"bold",DG,{align:"center"})}
+function drawC(d,s,x,y,cw,ch){const{G,GOLD,DG,P}=pal(),R=rad(),W=[255,255,255],cx=x+cw/2;
+ d.setFillColor(...P);d.setDrawColor(...GOLD.map(v=>Math.round(v*.9)));d.setLineWidth(.8);d.roundedRect(x,y,cw,ch,R,R,"FD");
+ d.setFillColor(...G);d.roundedRect(x,y,cw,2*R+1,R,R,"F");d.lines([[cw,0],[0,70-R],[-cw*.15,48,-cw*.85,48,-cw,0]],x,y+R,[1,1],"F",true);
+ d.setDrawColor(...GOLD);d.setLineWidth(1.4);d.lines([[cw*.15,48,cw*.85,48,cw,0]],x,y+74,[1,1],"S",false);
+ logoC(d,cx,y+17,11,G);fitTxt(d,(CFG.nom||"NOM DE L'ÉCOLE").toUpperCase(),cx,y+38,138,7.2,4.4,"bold",W,{align:"center"});fitTxt(d,ttl(),cx,y+47,120,6,4,"bold",GOLD,{align:"center",charSpace:.4});
+ d.setFillColor(...P);d.circle(cx,y+90,36,"F");photoBox(d,s,cx-31,y+59,62,G,P,G);
+ fitTxt(d,s.nom||"",cx,y+142,136,11.5,6.5,"bold",[20,20,20],{align:"center"});
+ d.setFillColor(...G);d.roundedRect(cx-36,y+147,72,10,5,5,"F");fitTxt(d,s.mat||"",cx,y+154.2,66,7.2,4.8,"bold",W,{align:"center"});
+ rows(s,[1,3,4]).forEach(([k,v],j)=>rowC(d,k,v,x+12,y+172+j*9.4,46,cw-24,9,x+cw-12,DG,[0,0,0],[205,220,210]));
+ d.setFont("helvetica","bold");d.setFontSize(5.4);d.setTextColor(...DG);d.text(TYP(),cx,y+199.5,{align:"center",charSpace:.5});fitTxt(d,s.tel||"……………",cx,y+208,120,9,5.5,"bold",[0,0,0],{align:"center"});
+ const by=y+ch-20;d.setFillColor(...G);d.roundedRect(x,by,cw,20,R,R,"F");d.rect(x,by,cw,10,"F");stripe(d,x,by,cw,2,GOLD);fitTxt(d,CFG.adresse||CFG.tel||"",cx,by+13,136,5.6,3.8,"bold",W,{align:"center"})}
+function drawD(d,s,x,y,cw,ch){const{G,GOLD,DG,P}=pal(),R=rad(),W=[255,255,255],cx=x+cw/2;
+ d.setFillColor(...P);d.setDrawColor(...GOLD.map(v=>Math.round(v*.9)));d.setLineWidth(.8);d.roundedRect(x,y,cw,ch,R,R,"FD");
+ d.setFillColor(...G);d.roundedRect(x,y,cw,2*R+1,R,R,"F");poly(d,[[x,y+R],[x+cw,y+R],[x+cw,y+62],[x,y+118]]);
+ d.setFillColor(...GOLD);poly(d,[[x,y+118],[x+cw,y+62],[x+cw,y+66.5],[x,y+122.5]]);d.setFillColor(...W);poly(d,[[x,y+106],[x+cw,y+50],[x+cw,y+52],[x,y+108]]);
+ logoC(d,x+22,y+22,12,G);fitTxt(d,CFG.ligne1||"",x+38,y+12,105,4.8,3.4,"bold",W);fitTxt(d,(CFG.nom||"NOM DE L'ÉCOLE").toUpperCase(),x+38,y+23,105,7.2,4.2,"bold",GOLD);
+ const sub=[CFG.sous,CFG.adresse].filter(Boolean).join(" · ");if(sub)fitTxt(d,sub,x+38,y+30,105,4.8,3.4,"bold",W);
+ titlePill(d,ttl(),x+10,y+40,cw-20,GOLD,DG,true);
+ d.setFillColor(...P);d.circle(cx,y+106,35,"F");photoBox(d,s,cx-31,y+75,62,G,P,GOLD);d.setDrawColor(...GOLD);d.setLineWidth(2.6);if((CFG.pshape||"square")==="circle")d.circle(cx,y+106,33.5,"S");
+ fitTxt(d,s.nom||"",cx,y+158,136,11,6.5,"bold",G,{align:"center"});
+ d.setFillColor(...G);d.roundedRect(cx-40,y+163,80,10,5,5,"F");fitTxt(d,s.classe||s.mat||"",cx,y+170.2,74,7.2,4.8,"bold",GOLD,{align:"center"});
+ rows(s,[0,1,3]).forEach(([k,v],j)=>rowC(d,k,v,x+12,y+188+j*9.4,46,cw-24,9,x+cw-12,DG,[0,0,0],[205,220,210]));
+ const by=y+ch-14;d.setFillColor(...G);d.roundedRect(x,by,cw,14,R,R,"F");d.rect(x,by,cw,7,"F");d.setFillColor(...GOLD);poly(d,[[x+cw-58,by],[x+cw-30,by-14],[x+cw-12,by]]);
+ d.setFont("helvetica","bold");d.setFontSize(5.8);d.setTextColor(...W);if(CFG.tel)d.text(CFG.tel,x+12,y+ch-5)}
+function drawCard(d,s,x,y,cw,ch){({member:()=>drawM(d,s,x,y,cw,ch),gold:()=>drawG(d,s,x,y,cw,ch),amber:()=>drawB(d,s,x,y,cw,ch),badge:()=>drawL(d,s,x,y,cw,ch),arc:()=>drawC(d,s,x,y,cw,ch),diag:()=>drawD(d,s,x,y,cw,ch),wave:()=>drawA(d,s,x,y,cw,ch,true),side:()=>drawS(d,s,x,y,cw,ch),portrait:()=>drawP(d,s,x,y,cw,ch)}[CFG.tpl]||(()=>drawA(d,s,x,y,cw,ch,false)))()}
 async function buildPDF(list){await prep(list);const d=new window.jspdf.jsPDF({unit:"pt",format:"a4",compress:true});arPatch(d);const[cw,ch]=csz(),P=isP(),mx=40,my=36,gx=P?28:31,gy=P?22:14,cols=P?3:2,per=P?9:8;
  list.forEach((s,i)=>{const k=i%per;if(i&&k===0)d.addPage();const x=mx+(k%cols)*(cw+gx),y=my+Math.floor(k/cols)*(ch+gy);drawCard(d,s,x,y,cw,ch);
   if(CFG.marks){d.setDrawColor(150);d.setLineWidth(.3);[[x,y,-1,-1],[x+cw,y,1,-1],[x,y+ch,-1,1],[x+cw,y+ch,1,1]].forEach(([a,b,sx,sy])=>{d.line(a+sx*2,b,a+sx*7,b);d.line(a,b+sy*2,a,b+sy*7)})}});return d.output("blob")}
