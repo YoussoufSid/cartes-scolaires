@@ -2900,9 +2900,9 @@ function drawP(d,s,x,y,cw,ch){const{G,GOLD,DG,P}=pal(),R=rad(),LN=lines(s),TY=ty
  d.setFont("helvetica","normal");d.setFontSize(5);d.setTextColor(110);d.text(CFG.directeur||"Le Directeur",x+22,y+128,{align:"center"});
  qrBox(d,s,x+cw-9-30-3,y+97,30,G);
  d.setTextColor(20);d.setFont("helvetica","bold");let f=11;d.setFontSize(f);const nm=s.nom||"";while(f>7&&d.getTextWidth(nm)>136){f-=.25;d.setFontSize(f)}
- let nl=1;if(d.getTextWidth(nm)>136){f=8.5;d.setFontSize(f);const L=d.splitTextToSize(nm,136).slice(0,2);d.text(L,cx,y+156,{align:"center",lineHeightFactor:1.05});nl=2}else d.text(nm,cx,y+160,{align:"center"});
- const py=y+(nl>1?169:167);d.setFillColor(...G);d.roundedRect(cx-36,py,72,10,5,5,"F");fitTxt(d,s.mat||"",cx,py+7.2,66,7.2,4.8,"bold",W,{align:"center"});
- LN.forEach(([k,v],j)=>lv(d,k,v,x+12,y+192+9.4*j,38,cw-24,9.5,DG,x+cw-12));
+ let nl=1;if(d.getTextWidth(nm)>136){f=8.5;d.setFontSize(f);const L=d.splitTextToSize(nm,136).slice(0,2);d.text(L,cx,y+153,{align:"center",lineHeightFactor:1.05});nl=2}else d.text(nm,cx,y+157,{align:"center"});
+ const py=y+(nl>1?164:162);d.setFillColor(...G);d.roundedRect(cx-36,py,72,10,5,5,"F");fitTxt(d,s.mat||"",cx,py+7.2,66,7.2,4.8,"bold",W,{align:"center"});
+ LN.forEach(([k,v],j)=>lv(d,k,v,x+12,y+187.5+9.2*j,38,cw-24,9.5,DG,x+cw-12));
  const by=y+ch-20;d.setFillColor(...G);d.roundedRect(x,by,cw,20,R,R,"F");d.rect(x,by,cw,10,"F");stripe(d,x,by,cw,2,GOLD);d.setDrawColor(...W);d.setLineWidth(.4);d.line(cx,by+6,cx,by+17);
  tl2(d,ADM(),CFG.tel||"……………",x+cw/4,by,cw/2-8,GOLD,9,17);tl2(d,TYP(),s.tel||"……………",x+3*cw/4,by,cw/2-8,GOLD,9,17)}
 function drawCard(d,s,x,y,cw,ch){({wave:()=>drawA(d,s,x,y,cw,ch,true),side:()=>drawS(d,s,x,y,cw,ch),portrait:()=>drawP(d,s,x,y,cw,ch)}[CFG.tpl]||(()=>drawA(d,s,x,y,cw,ch,false)))()}
