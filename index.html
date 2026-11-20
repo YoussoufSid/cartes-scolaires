@@ -2804,9 +2804,9 @@ function cardName(d,name,x,y,w,fs0,fmin){d.setFont("helvetica","bold");let f=fs0
  d.text(L.slice(0,2),x,y-5.5,{lineHeightFactor:1.05});return 2}
 /* ---------- moteur de cartes : types, modèles, couleurs ---------- */
 const TYPES={student:{fr:"Carte scolaire",ar:"بطاقة تلميذ",ar4:"القسم",arp:"ولي الأمر",l4:"Classe",par:"PARENT / TUTEUR",n:["Élève","تلميذ"]},staff:{fr:"Carte du personnel",ar:"بطاقة موظف",ar4:"الوظيفة",arp:"للطوارئ",l4:"Fonction",par:"URGENCE",n:["Personnel","موظف"]},member:{fr:"Carte de membre",ar:"بطاقة عضوية",ar4:"المجموعة",arp:"للتواصل",l4:"Groupe",par:"CONTACT",n:["Membre","عضو"]},lib:{fr:"Carte de bibliothèque",ar:"بطاقة مكتبة",ar4:"القسم",arp:"للتواصل",l4:"Section",par:"CONTACT",n:["Bibliothèque","مكتبة"]}};
-const TPLS={classic:{o:"L",n:["Classique","كلاسيكي"]},wave:{o:"L",n:["Vague","موجة"]},side:{o:"L",n:["Latéral","جانبي"]},portrait:{o:"P",n:["Portrait","عمودي"]},member:{o:"L",n:["Adhésion","عضوية"]},gold:{o:"L",n:["Or & vague","ذهبي"]},amber:{o:"L",n:["Orange","برتقالي"]},badge:{o:"P",n:["Badge","شارة"]},arc:{o:"P",n:["Arc","قوس"]},diag:{o:"P",n:["Diagonal","قطري"]}};
+const TPLS={classic:{o:"L",n:["Classique","كلاسيكي"]},wave:{o:"L",n:["Vague","موجة"]},side:{o:"L",n:["Latéral","جانبي"]},portrait:{o:"P",n:["Portrait","عمودي"]},member:{o:"L",n:["Adhésion","عضوية"]},gold:{o:"L",n:["Or & vague","ذهبي"]},amber:{o:"L",n:["Orange","برتقالي"]},badge:{o:"P",n:["Badge","شارة"]},arc:{o:"P",n:["Arc","قوس"]},diag:{o:"P",n:["Diagonal","قطري"]},cert:{o:"A",n:["Certificat A4","شهادة A4"]},note:{o:"N",n:["Cahier A4","غلاف دفتر"]},poster:{o:"N",n:["Affiche A4","ملصق تهنئة"]}};
 const PALS=[["Vert","#0E4A32","#DEB028"],["Bleu","#12356B","#E0B13A"],["Bordeaux","#6B1530","#D9B25F"],["Noir & or","#1C1C1C","#D4AF37"],["Violet","#4B2A7B","#E6B84C"],["Turquoise","#0B6E75","#F2B84B"],["Orange","#C2410C","#1F3A5F"],["Rouge","#B3261E","#F5C542"],["Marine","#0B2A4A","#7FC8F8"],["Ardoise","#37474F","#F2A93B"],["Rose","#A21C5B","#F5D17A"],["Brun","#5B3A1E","#E2B66B"]];
-const ty=()=>TYPES[CFG.type]||TYPES.student,rad=()=>CFG.radius==null?8:CFG.radius,isP=()=>(TPLS[CFG.tpl]||{}).o==="P",csz=()=>isP()?[153,242]:[242,153];
+const ty=()=>TYPES[CFG.type]||TYPES.student,rad=()=>isDoc()?0:CFG.radius==null?8:CFG.radius,isP=()=>(TPLS[CFG.tpl]||{}).o==="P",csz=()=>{const o=(TPLS[CFG.tpl]||{}).o;return o==="A"?[841.89,595.28]:o==="N"?[595.28,841.89]:isP()?[153,242]:[242,153]};
 function pal(){const G=rgb(CFG.color),GOLD=rgb(CFG.accent),DG=dark(G);const P={cream:[251,247,236],white:[255,255,255],tint:G.map(v=>Math.round(255-(255-v)*.07))}[CFG.paper||"cream"]||[251,247,236];return{G,GOLD,DG,P}}
 const AR_=()=>CFG.llang==="ar",ADM=()=>AR_()?"الإدارة":"ADMINISTRATION",TYP=()=>AR_()?ty().arp:ty().par,tdef=k=>AR_()?TYPES[k].ar:TYPES[k].fr;
 function lines(s){const dots="……………",a=AR_();return[[a?"تاريخ الميلاد":"Né(e) le",s.naissance?fdate(s.naissance):dots],[a?"مكان الميلاد":"à",s.lieu||dots],[a?"السكن":"Domicile",s.domicile||dots],[a?ty().ar4:ty().l4,s.classe||dots]]}
@@ -2814,7 +2814,7 @@ function lines(s){const dots="……………",a=AR_();return[[a?"تاريخ ا�
 const IMG=new Map();function loadImg(u){if(!u)return Promise.resolve();let e=IMG.get(u);if(!e){const im=new Image();e={im,p:new Promise(r=>{im.onload=im.onerror=r})};im.src=u;IMG.set(u,e)}return e.p}
 const MSK=new Map();
 function photoFor(s,bg){if(!s.photo)return null;const sh=CFG.pshape||"square";if(sh==="square")return s.photo;const k=s.id+"|"+sh+"|"+bg.join()+"|"+s.photo.length;let m=MSK.get(k);if(m)return m;const e=IMG.get(s.photo);if(!e||!e.im.naturalWidth)return s.photo;const S=260,c=document.createElement("canvas");c.width=S;c.height=S;const x=c.getContext("2d");x.fillStyle="rgb("+bg.join(",")+")";x.fillRect(0,0,S,S);x.beginPath();if(sh==="circle")x.arc(S/2,S/2,S/2,0,7);else{const R=S*.12;x.moveTo(R,0);x.arcTo(S,0,S,S,R);x.arcTo(S,S,0,S,R);x.arcTo(0,S,0,0,R);x.arcTo(0,0,S,0,R);x.closePath()}x.clip();x.drawImage(e.im,0,0,S,S);m=c.toDataURL("image/jpeg",.85);MSK.set(k,m);return m}
-async function prep(list){const us=new Set([CFG.logo,CFG.sign,CFG.cachet]);list.forEach(s=>{if(s.photo)us.add(s.photo)});await Promise.all([...us].map(loadImg));const bg=CFG.tpl==="side"?pal().G:CFG.tpl==="member"?[255,255,255]:pal().P;list.forEach(s=>{const m=photoFor(s,bg);if(m)us.add(m)});await Promise.all([...us].map(loadImg))}
+async function prep(list){const us=new Set([CFG.logo,CFG.sign,CFG.cachet]);list.forEach(s=>{if(s.photo)us.add(s.photo)});await Promise.all([...us].map(loadImg));const bg=CFG.tpl==="side"?pal().G:(CFG.tpl==="member"||CFG.tpl==="poster")?[255,255,255]:pal().P;list.forEach(s=>{const m=photoFor(s,bg);if(m)us.add(m)});await Promise.all([...us].map(loadImg))}
 /* ---------- pinceau canvas (même API que jsPDF) pour l'aperçu fidèle ---------- */
 function CP(cv,S){const x=cv.getContext("2d");x.scale(S,S);const st={f:"#000",d:"#000",t:"#000",lw:1,fs:10,fb:false};const col=(a,b,c)=>b===undefined?`rgb(${a},${a},${a})`:`rgb(${a},${b},${c})`;const font=t=>{x.font=(st.fb?"bold ":"")+(t&&hasAr(t)?st.fs*.9:st.fs)+"px Helvetica,Arial,"+FAM};
  const rr=(X,Y,W,H,R)=>{R=Math.min(R,W/2,H/2);x.beginPath();x.moveTo(X+R,Y);x.arcTo(X+W,Y,X+W,Y+H,R);x.arcTo(X+W,Y+H,X,Y+H,R);x.arcTo(X,Y+H,X,Y,R);x.arcTo(X,Y,X+W,Y,R);x.closePath()};
@@ -2827,7 +2827,7 @@ function CP(cv,S){const x=cv.getContext("2d");x.scale(S,S);const st={f:"#000",d:
  line:(a,b,c,e)=>{x.beginPath();x.moveTo(a,b);x.lineTo(c,e);x.strokeStyle=st.d;x.lineWidth=st.lw;x.stroke()},
  lines:(sg,X,Y,sc,sty,cl)=>{x.beginPath();x.moveTo(X,Y);let cx=X,cy=Y;sg.forEach(a=>{if(a.length===2){cx+=a[0];cy+=a[1];x.lineTo(cx,cy)}else{x.bezierCurveTo(cx+a[0],cy+a[1],cx+a[2],cy+a[3],cx+a[4],cy+a[5]);cx+=a[4];cy+=a[5]}});if(cl)x.closePath();paint(sty)},
  addImage:(u,f,X,Y,W,H)=>{const e=IMG.get(u);if(e&&e.im.naturalWidth)x.drawImage(e.im,X,Y,W,H)},saveGraphicsState:()=>x.save(),restoreGraphicsState:()=>x.restore(),GState:function(q){this.o=q},setGState:g=>{x.globalAlpha=g.o.opacity}};return o}
-function cardCanvas(s,S){const[w,h]=csz(),dpr=Math.min(2,window.devicePixelRatio||1)*1.5,cv=document.createElement("canvas");cv.width=Math.round(w*S*dpr);cv.height=Math.round(h*S*dpr);cv.style.width=w*S+"px";cv.style.height=h*S+"px";cv.style.borderRadius="6px";cv.style.boxShadow="0 2px 8px #0003";drawCard(CP(cv,S*dpr),s,0,0,w,h);return cv}
+function cardCanvas(s,S){if(isDoc())S*=S>1?.42:.3;const[w,h]=csz(),dpr=Math.min(2,window.devicePixelRatio||1)*1.5,cv=document.createElement("canvas");cv.width=Math.round(w*S*dpr);cv.height=Math.round(h*S*dpr);cv.style.width=w*S+"px";cv.style.height=h*S+"px";cv.style.borderRadius="6px";cv.style.boxShadow="0 2px 8px #0003";drawCard(CP(cv,S*dpr),s,0,0,w,h);return cv}
 /* ---------- éléments de dessin partagés ---------- */
 function stripe(d,x,y,w,h,GOLD){if(CFG.flag)[[20,181,58],[252,209,22],[206,17,38]].forEach((c,j)=>{d.setFillColor(...c);d.rect(x+j*w/3,y,w/3+.05,h,"F")});else{d.setFillColor(...GOLD);d.rect(x,y,w,h,"F")}}
 function hdr(d,x,y,cw,R,G,GOLD,wave){d.setFillColor(...G);if(wave){d.roundedRect(x,y,cw,40,R,R,"F");d.rect(x,y+Math.min(20,R),cw,40-Math.min(20,R),"F");d.lines([[cw/3,16,2*cw/3,16,cw,0]],x,y+40,[1,1],"F",true);d.setDrawColor(...GOLD);d.setLineWidth(1.4);d.lines([[cw/3,16,2*cw/3,16,cw,0]],x,y+43.6,[1,1],"S",false)}else{d.roundedRect(x,y,cw,46,R,R,"F");d.rect(x,y+Math.min(20,R),cw,46-Math.min(20,R),"F")}}
@@ -2981,8 +2981,58 @@ function drawD(d,s,x,y,cw,ch){const{G,GOLD,DG,P}=pal(),R=rad(),W=[255,255,255],c
  rows(s,[0,1,3]).forEach(([k,v],j)=>rowC(d,k,v,x+12,y+188+j*9.4,46,cw-24,9,x+cw-12,DG,[0,0,0],[205,220,210]));
  const by=y+ch-14;d.setFillColor(...G);d.roundedRect(x,by,cw,14,R,R,"F");d.rect(x,by,cw,7,"F");d.setFillColor(...GOLD);poly(d,[[x+cw-58,by],[x+cw-30,by-14],[x+cw-12,by]]);
  d.setFont("helvetica","bold");d.setFontSize(5.8);d.setTextColor(...W);if(CFG.tel)d.text(CFG.tel,x+12,y+ch-5)}
-function drawCard(d,s,x,y,cw,ch){({member:()=>drawM(d,s,x,y,cw,ch),gold:()=>drawG(d,s,x,y,cw,ch),amber:()=>drawB(d,s,x,y,cw,ch),badge:()=>drawL(d,s,x,y,cw,ch),arc:()=>drawC(d,s,x,y,cw,ch),diag:()=>drawD(d,s,x,y,cw,ch),wave:()=>drawA(d,s,x,y,cw,ch,true),side:()=>drawS(d,s,x,y,cw,ch),portrait:()=>drawP(d,s,x,y,cw,ch)}[CFG.tpl]||(()=>drawA(d,s,x,y,cw,ch,false)))()}
-async function buildPDF(list){await prep(list);const d=new window.jspdf.jsPDF({unit:"pt",format:"a4",compress:true});arPatch(d);const[cw,ch]=csz(),P=isP(),mx=40,my=36,gx=P?28:31,gy=P?22:14,cols=P?3:2,per=P?9:8;
+/* ---------- documents A4 : certificat, couverture de cahier, affiche ---------- */
+const DK={quran:{n:["Coran","ختم القرآن"],ar:"شهادة ختم القرآن الكريم",fr:"CERTIFICAT DE RÉCITATION DU CORAN",va:"قد أتمّ(ت) تلاوة القرآن الكريم سردًا",vf:"a achevé la récitation du Coran",pa:"مبارك ختم القرآن الكريم",pf:"FÉLICITATIONS POUR LA FIN DU CORAN"},success:{n:["Réussite","نجاح"],ar:"شهادة نجاح",fr:"CERTIFICAT DE RÉUSSITE",va:"قد نجح(ت) في امتحانات هذا العام",vf:"a réussi ses examens",pa:"مبارك نجاحك",pf:"FÉLICITATIONS POUR VOTRE RÉUSSITE"},merit:{n:["Mérite","تقدير"],ar:"شهادة تقدير",fr:"CERTIFICAT DE MÉRITE",va:"قد استحقّ(ت) هذا التقدير لجدّه واجتهاده وحسن سلوكه",vf:"s'est distingué(e) par son assiduité, son application et sa bonne conduite",pa:"شهادة شكر وتقدير",pf:"FÉLICITATIONS ET ENCOURAGEMENTS"}};
+const dk=()=>DK[CFG.dkind]||DK.quran,isDoc=()=>"AN".includes((TPLS[CFG.tpl]||{}).o||"x");
+function para(d,t,cx,y,w,fs,lh,col,bold){d.setFont("helvetica",bold?"bold":"normal");d.setFontSize(fs);d.setTextColor(...col);const L=d.splitTextToSize(t,w);L.forEach((l,i)=>d.text(l,cx,y+i*lh,{align:"center"}));return L.length}
+function drawCert(d,s,x,y,cw,ch){const{G,GOLD,DG,P}=pal(),W=[255,255,255],a=AR_(),K=dk(),cx=x+cw/2,sc=CFG.nom||"NOM DE L'ÉCOLE";
+ d.setFillColor(...P);d.rect(x,y,cw,ch,"F");
+ d.setDrawColor(...G);d.setLineWidth(7);d.rect(x+14,y+14,cw-28,ch-28,"S");d.setDrawColor(...GOLD);d.setLineWidth(1.6);d.rect(x+26,y+26,cw-52,ch-52,"S");
+ d.setFillColor(...G);[[x+26,y+26],[x+cw-26,y+26],[x+26,y+ch-26],[x+cw-26,y+ch-26]].forEach(([a1,b1])=>{poly(d,[[a1-9,b1],[a1,b1-9],[a1+9,b1],[a1,b1+9]],"F")});
+ if(CFG.logo){try{d.saveGraphicsState();d.setGState(new d.GState({opacity:.06}));d.addImage(CFG.logo,"PNG",cx-130,y+190,260,260,"logo","FAST");d.restoreGraphicsState()}catch(e){}}
+ logoC(d,x+95,y+90,40,G);d.setDrawColor(...GOLD);d.setLineWidth(2);d.circle(x+95,y+90,41,"S");
+ const ps=84;photoBox(d,s,x+cw-95-ps,y+48,ps,G,P,G);
+ fitTxt(d,CFG.ligne1||"",cx,y+56,420,12,6,"bold",DG,{align:"center"});
+ fitTxt(d,sc.toUpperCase(),cx,y+86,470,24,10,"bold",G,{align:"center"});
+ const sub=[CFG.sous,CFG.adresse].filter(Boolean).join(" · ");if(sub)fitTxt(d,sub,cx,y+106,470,11,6,"bold",[90,90,90],{align:"center"});
+ const T0=a?K.ar:K.fr;fitTxt(d,T0,cx,y+158,560,34,14,"bold",GOLD.map(v=>Math.round(v*.82)),{align:"center"});
+ d.setDrawColor(...GOLD);d.setLineWidth(1.4);d.line(cx-170,y+170,cx+170,y+170);poly(d,[[cx-5,y+170],[cx,y+165],[cx+5,y+170],[cx,y+175]],"F");
+ para(d,a?"تشهد إدارة المدرسة بأن الطالب(ة)":"La direction de "+sc+" certifie que :",cx,y+212,600,15,20,[40,40,40]);
+ fitTxt(d,s.nom||"……………………………",cx,y+264,520,30,12,"bold",G,{align:"center"});d.setDrawColor(...G);d.setLineWidth(.8);d.line(cx-230,y+275,cx+230,y+275);
+ const cl=s.classe&&!a?"("+s.classe+") ":"",yr=a?"\u2066"+CFG.annee+"\u2069":CFG.annee;
+ para(d,(a?K.va+" خلال العام الدراسي "+yr+"، وإشعارًا بذلك أُعطيت له هذه الشهادة راجين له التوفيق والاستمرار.":cl+K.vf+" durant l'année scolaire "+yr+". En foi de quoi, ce certificat lui est délivré, avec nos vœux de réussite et de persévérance."),cx,y+322,560,15,25,[40,40,40]);
+ const fy=y+ch-82;d.setDrawColor(70);d.setLineWidth(.7);
+ d.line(x+70,fy,x+240,fy);d.line(x+cw-240,fy,x+cw-70,fy);
+ d.setFont("helvetica","bold");d.setFontSize(10);d.setTextColor(70);d.text(a?"تحريرًا في":"Fait le",x+155,fy+14,{align:"center"});d.text(CFG.directeur||"Le Directeur",x+cw-155,fy+14,{align:"center"});
+ try{if(CFG.sign)d.addImage(CFG.sign,"PNG",x+cw-215,fy-44,120,40,"sg","FAST")}catch(e){}
+ if(CFG.cachet){try{d.addImage(CFG.cachet,"PNG",cx-42,fy-58,84,84,"ct","FAST")}catch(e){}}else{d.setFillColor(...G);d.circle(cx,fy-12,34,"F");d.setDrawColor(...GOLD);d.setLineWidth(2);d.circle(cx,fy-12,28,"S");d.setFillColor(...GOLD);poly(d,[[cx,fy-30],[cx+5,fy-16],[cx+19,fy-16],[cx+8,fy-7],[cx+12,fy+7],[cx,fy-1],[cx-12,fy+7],[cx-8,fy-7],[cx-19,fy-16],[cx-5,fy-16]],"F")}}
+function drawNote(d,s,x,y,cw,ch){const{G,GOLD,DG,P}=pal(),W=[255,255,255],a=AR_(),cx=x+cw/2,sc=CFG.nom||"NOM DE L'ÉCOLE";
+ d.setFillColor(...P);d.rect(x,y,cw,ch,"F");
+ d.setFillColor(...G);d.rect(x,y,cw,220,"F");waveT(d,x,y,cw,GOLD,256,214);waveT(d,x,y,cw,G,244,200);
+ fitTxt(d,CFG.ligne1||"",cx,y+34,420,13,6,"bold",GOLD,{align:"center"});
+ fitTxt(d,sc.toUpperCase(),cx,y+82,500,38,14,"bold",W,{align:"center"});
+ const sub=[CFG.sous,CFG.adresse].filter(Boolean).join(" · ");if(sub)fitTxt(d,sub,cx,y+112,480,15,7,"bold",GOLD,{align:"center"});
+ d.setFillColor(...W);d.roundedRect(cx-190,y+132,380,44,22,22,"F");fitTxt(d,a?"دفتر المدرسة":(CFG.devise||"CAHIER"),cx,y+160,350,15,7,"bold",G,{align:"center"});
+ d.setFillColor(...W);d.circle(cx,y+400,125,"F");d.setDrawColor(...G);d.setLineWidth(5);d.circle(cx,y+400,122,"S");d.setDrawColor(...GOLD);d.setLineWidth(3);d.circle(cx,y+400,113,"S");
+ if(CFG.logo){try{d.addImage(CFG.logo,"PNG",cx-95,y+305,190,190,"logo","FAST")}catch(e){}}else{d.setTextColor(...G);d.setFont("helvetica","bold");d.setFontSize(80);d.text(initials(CFG.nom||"EC"),cx,y+428,{align:"center"})}
+ d.setFillColor(215,38,56);d.roundedRect(cx+70,y+560,150,38,19,19,"F");d.setTextColor(255);d.setFont("helvetica","bold");d.setFontSize(15);d.text(a?"دفتر":"CAHIER",cx+145,y+585,{align:"center",charSpace:1});
+ const by=y+612,bh=170;d.setFillColor(...W);d.setDrawColor(...G);d.setLineWidth(3);d.roundedRect(x+60,by,cw-120,bh,22,22,"FD");
+ const F=a?[["الاسم",s.nom||""],["الصفّ",s.classe||""],["المادة",""],["التاريخ",""]]:[["NOM",s.nom||""],["CLASSE",s.classe||""],["MATIÈRE",""],["DATE",""]];
+ F.forEach(([k,v],j)=>{const yy=by+36+j*34;d.setFont("helvetica","bold");d.setFontSize(11);d.setTextColor(...DG);d.text(k,x+90,yy);d.setDrawColor(90);d.setLineWidth(.8);d.line(x+90+70,yy+3,x+cw-90,yy+3);if(v)fitTxt(d,v,x+90+76,yy-1,cw-180-80,14,8,"bold",[20,20,20])});
+ fitTxt(d,CFG.adresse||CFG.tel||"",cx,y+ch-26,480,11,6,"bold",DG,{align:"center"})}
+function drawPoster(d,s,x,y,cw,ch){const{G,GOLD,DG,P}=pal(),W=[255,255,255],a=AR_(),K=dk(),cx=x+cw/2,sc=CFG.nom||"NOM DE L'ÉCOLE";
+ d.setFillColor(...P);d.rect(x,y,cw,ch,"F");
+ d.setFillColor(...G);poly(d,[[x,y],[x+cw,y],[x+cw,y+300],[x,y+430]]);d.setFillColor(...GOLD);poly(d,[[x,y+430],[x+cw,y+300],[x+cw,y+316],[x,y+446]]);d.setFillColor(...W);poly(d,[[x,y+414],[x+cw,y+284],[x+cw,y+290],[x,y+420]]);
+ logoC(d,x+60,y+58,34,G);fitTxt(d,sc.toUpperCase(),x+108,y+54,cw-128,18,8,"bold",W);const sub=[CFG.sous,CFG.adresse].filter(Boolean).join(" · ");if(sub)fitTxt(d,sub,x+108,y+74,cw-128,11,6,"bold",GOLD);
+ fitTxt(d,a?K.pa:K.pf,cx,y+140,cw-60,a?44:26,12,"bold",W,{align:"center"});
+ d.setDrawColor(...GOLD);d.setLineWidth(3);d.line(cx-90,y+156,cx+90,y+156);
+ const ps=270;d.setFillColor(...W);if((CFG.pshape||"square")==="circle")d.circle(cx,y+330,ps/2+8,"F");else d.rect(cx-ps/2-8,y+195,ps+16,ps+16,"F");photoBox(d,s,cx-ps/2,y+195,ps,G,W,GOLD);
+ d.setFillColor(...G);d.roundedRect(x+40,y+ch-250,cw-80,140,22,22,"F");
+ fitTxt(d,s.nom||"……………",cx,y+ch-185,cw-120,46,16,"bold",W,{align:"center"});
+ d.setFillColor(...GOLD);d.roundedRect(cx-150,y+ch-160,300,40,20,20,"F");fitTxt(d,[s.classe,CFG.annee].filter(Boolean).join("  ·  "),cx,y+ch-134,270,18,8,"bold",DG,{align:"center"});
+ fitTxt(d,CFG.tel||"",cx,y+ch-60,cw-80,14,7,"bold",DG,{align:"center"})}
+function drawCard(d,s,x,y,cw,ch){({cert:()=>drawCert(d,s,x,y,cw,ch),note:()=>drawNote(d,s,x,y,cw,ch),poster:()=>drawPoster(d,s,x,y,cw,ch),member:()=>drawM(d,s,x,y,cw,ch),gold:()=>drawG(d,s,x,y,cw,ch),amber:()=>drawB(d,s,x,y,cw,ch),badge:()=>drawL(d,s,x,y,cw,ch),arc:()=>drawC(d,s,x,y,cw,ch),diag:()=>drawD(d,s,x,y,cw,ch),wave:()=>drawA(d,s,x,y,cw,ch,true),side:()=>drawS(d,s,x,y,cw,ch),portrait:()=>drawP(d,s,x,y,cw,ch)}[CFG.tpl]||(()=>drawA(d,s,x,y,cw,ch,false)))()}
+async function buildPDF(list){await prep(list);const od=(TPLS[CFG.tpl]||{}).o==="A"?"landscape":"portrait";const d=new window.jspdf.jsPDF({unit:"pt",format:"a4",orientation:od,compress:true});arPatch(d);if(isDoc()){const[w,h]=csz();list.forEach((s,i)=>{if(i)d.addPage("a4",od);drawCard(d,s,0,0,w,h)});return d.output("blob")}const[cw,ch]=csz(),P=isP(),mx=40,my=36,gx=P?28:31,gy=P?22:14,cols=P?3:2,per=P?9:8;
  list.forEach((s,i)=>{const k=i%per;if(i&&k===0)d.addPage();const x=mx+(k%cols)*(cw+gx),y=my+Math.floor(k/cols)*(ch+gy);drawCard(d,s,x,y,cw,ch);
   if(CFG.marks){d.setDrawColor(150);d.setLineWidth(.3);[[x,y,-1,-1],[x+cw,y,1,-1],[x,y+ch,-1,1],[x+cw,y+ch,1,1]].forEach(([a,b,sx,sy])=>{d.line(a+sx*2,b,a+sx*7,b);d.line(a,b+sy*2,a,b+sy*7)})}});return d.output("blob")}
 
@@ -3011,7 +3061,7 @@ function vSchool(){const c=CFG;$("#app").innerHTML=`
  <div class="g3" style="margin-top:6px">${imgField("f_logo",T("Logo de l'école (carré)","شعار المدرسة (مربع)"),c.logo)}${imgField("f_sign",T("Signature (facultatif)","التوقيع (اختياري)"),c.sign)}${imgField("f_cachet",T("Cachet (facultatif)","الختم (اختياري)"),c.cachet)}</div>
  <div class="sub" style="margin-top:6px">${T("Conseil : PNG à fond transparent pour la signature et le cachet.","نصيحة: صورة PNG بخلفية شفافة للتوقيع والختم.")}</div></div>
 <div class="card"><h2>${T("Type et modèle de carte","نوع البطاقة وتصميمها")}</h2>
- <label>${T("Type de carte","نوع البطاقة")}</label><div class="chips">${Object.entries(TYPES).map(([k,v])=>`<button class="chip ${c.type===k?"on":""}" data-ty="${k}">${T(v.n[0],v.n[1])}</button>`).join("")}</div>
+ ${isDoc()?`<label>${T("Type de document","نوع الوثيقة")}</label><div class="chips">${Object.entries(DK).map(([k,v])=>`<button class="chip ${(c.dkind||"quran")===k?"on":""}" data-dk="${k}">${T(v.n[0],v.n[1])}</button>`).join("")}</div>`:""}<label>${T("Type de carte","نوع البطاقة")}</label><div class="chips">${Object.entries(TYPES).map(([k,v])=>`<button class="chip ${c.type===k?"on":""}" data-ty="${k}">${T(v.n[0],v.n[1])}</button>`).join("")}</div>
  <label>${T("Langue des intitulés de la carte","لغة عناوين حقول البطاقة")}</label><div class="chips"><button class="chip ${c.llang!=="ar"?"on":""}" data-ll="fr">Français</button><button class="chip ${c.llang==="ar"?"on":""}" data-ll="ar">العربية</button></div>
  <label>${T("Modèle","التصميم")}</label><div class="tpls" id="tpls">${Object.entries(TPLS).map(([k,v])=>`<div class="tp ${c.tpl===k?"on":""}" data-tp="${k}"><div class="tpc"></div><div class="sub">${T(v.n[0],v.n[1])}</div></div>`).join("")}</div>
  <label>${T("Palette de couleurs","لوحة الألوان")}</label><div class="chips">${PALS.map((p,i)=>`<button class="chip pal" data-pal="${i}" title="${p[0]}"><span style="background:${p[1]}"></span><span style="background:${p[2]}"></span></button>`).join("")}</div>
@@ -3020,6 +3070,7 @@ function vSchool(){const c=CFG;$("#app").innerHTML=`
  <div><label>${T("Forme de la photo","شكل الصورة")}</label><select id="f_psh"><option value="square" ${c.pshape==="square"?"selected":""}>${T("Carrée","مربعة")}</option><option value="rounded" ${c.pshape==="rounded"?"selected":""}>${T("Arrondie","بحواف مستديرة")}</option><option value="circle" ${c.pshape==="circle"?"selected":""}>${T("Ronde","دائرية")}</option></select></div></div>
  <div class="sub" style="margin-top:8px">${T("Le modèle « Latéral » n'affiche pas la signature ni le cachet.","التصميم «جانبي» لا يعرض التوقيع والختم.")}</div></div>
 <button class="btn p" id="nx" style="width:100%;padding:13px">${T("Continuer → Élèves","التالي ← التلاميذ")}</button>`;
+ $$("[data-dk]").forEach(b=>b.onclick=()=>{CFG.dkind=b.dataset.dk;save();vSchool()});
  $$("[data-ty]").forEach(b=>b.onclick=()=>{const old=CFG.type;CFG.type=b.dataset.ty;if(!CFG.titre||CFG.titre===TYPES[old].fr||CFG.titre===TYPES[old].ar)CFG.titre=tdef(CFG.type);save();vSchool()});
  $$("[data-ll]").forEach(b=>b.onclick=()=>{const was=CFG.titre===tdef(CFG.type);CFG.llang=b.dataset.ll;if(was||!CFG.titre)CFG.titre=tdef(CFG.type);save();vSchool()});
  $$("[data-tp]").forEach(b=>b.onclick=()=>{CFG.tpl=b.dataset.tp;save();vSchool()});
@@ -3080,7 +3131,7 @@ function vPrint(){const cls=[...new Set(ST.map(s=>s.classe).filter(Boolean))].so
  const list=ST.filter(s=>(!PC||s.classe===PC)&&(PF===""||(PF==="1"?!!s.photo:!s.photo))).sort((a,b)=>(a.nom||"").localeCompare(b.nom||"","fr",{sensitivity:"base"}));
  
  $("#app").innerHTML=`<div class="card"><div class="row"><select id="pc" style="flex:1;min-width:160px"><option value="">${T("Toute l'école","كل المدرسة")} (${ST.length})</option>${cls.map(c=>`<option ${c===PC?"selected":""}>${esc(c)}</option>`).join("")}</select><select id="pf" style="max-width:170px"><option value="">${T("Tous","الكل")}</option><option value="1" ${PF==="1"?"selected":""}>${T("Avec photo","بصورة فقط")}</option><option value="0" ${PF==="0"?"selected":""}>${T("Sans photo","بلا صورة")}</option></select><button class="btn gold" id="pdf" ${list.length?"":"disabled"}>🖨 PDF (${list.length})</button></div>
- <div class="sub" style="margin-top:8px">${T("Format A4 · 8 cartes par page (85×54 mm, 9 en mode portrait) · imprimez à 100 % (taille réelle).","A4 · ٨ بطاقات في الصفحة (85×54 ملم) · اطبع بالحجم الفعلي 100%.")}</div>
+ <div class="sub" style="margin-top:8px">${isDoc()?T("Format A4 · une page par élève · imprimez à 100 %.","A4 · صفحة لكل تلميذ · اطبع بالحجم الفعلي 100%."):T("Format A4 · 8 cartes par page (85×54 mm, 9 en mode portrait) · imprimez à 100 % (taille réelle).","A4 · ٨ بطاقات في الصفحة (85×54 ملم) · اطبع بالحجم الفعلي 100%.")}</div>
  
  ${!CFG.nom?`<div class="note warn">${T("Indiquez le nom de l'école (étape 1).","اكتب اسم المدرسة (الخطوة ١).")}</div>`:""}</div>
  <div class="cards" id="cvs">${list.length?"":`<div class="sub">${T("Aucun élève","لا يوجد تلاميذ")}</div>`}</div>${list.length>60?`<div class="sub" style="text-align:center;margin-top:10px">${T("Aperçu limité aux 60 premières cartes — le PDF contient tout.","المعاينة تعرض أول ٦٠ بطاقة — ملف PDF يشمل الكل.")}</div>`:""}
@@ -3093,7 +3144,7 @@ let DP=null;const isIOS=/iPad|iPhone|iPod/.test(navigator.userAgent),standalone=
 function instBtn(){const b=$("#inst");if(!b||standalone||!/^https?:/.test(location.protocol)||window.AndroidBridge){return}if(DP||isIOS){b.style.display="";b.textContent="⬇ "+T("Installer","تثبيت")}}
 window.addEventListener("beforeinstallprompt",e=>{e.preventDefault();DP=e;instBtn()});
 window.addEventListener("appinstalled",()=>{DP=null;const b=$("#inst");if(b)b.style.display="none";toast(T("Application installée","تم تثبيت التطبيق"))});
-if("serviceWorker" in navigator&&/^https?:/.test(location.protocol))navigator.serviceWorker.register("sw.js").catch(()=>{});
+if("serviceWorker" in navigator&&/^https?:/.test(location.protocol)){const had=!!navigator.serviceWorker.controller;let rl=false;navigator.serviceWorker.addEventListener("controllerchange",()=>{if(!had||rl)return;rl=true;try{toast(T("Mise à jour installée…","تم تحديث التطبيق…"))}catch(e){}setTimeout(()=>location.reload(),900)});navigator.serviceWorker.register("sw.js").then(r=>{r.update();document.addEventListener("visibilitychange",()=>{if(!document.hidden)r.update()})}).catch(()=>{})}
 /* ---------- démarrage ---------- */
 $("#lg").onclick=()=>{LANG=LANG==="ar"?"fr":"ar";try{localStorage.setItem("cs_lang",LANG)}catch(e){}render()};
 (async()=>{await idb();const m=await kvGet("meta");if(m&&m.ids&&m.ids.length){META={ids:m.ids,names:m.names||{},cur:m.cur};await loadSchool(m.ids.includes(m.cur)?m.cur:m.ids[0])}else{const id=uid();META={ids:[id],names:{},cur:id};const c=await kvGet("cfg"),s=await kvGet("st");CUR=id;CFG={...DEF,...(c||{})};ST=Array.isArray(s)?s:[];META.names[id]=CFG.nom||"";await kvSet("meta",META);await kvSet("cfg:"+id,CFG);await kvSet("st:"+id,ST)}
