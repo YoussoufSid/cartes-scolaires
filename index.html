@@ -46,6 +46,37 @@ details.card>summary{list-style:none;cursor:pointer;font-size:16px;font-weight:8
 .toast{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);background:#17261d;color:#fff;padding:10px 16px;border-radius:12px;z-index:50;max-width:90%;font-size:14px}
 .modal{position:fixed;inset:0;background:#0007;z-index:20;display:flex;align-items:flex-start;justify-content:center;padding:14px;overflow:auto}.modal .box{background:#fff;border-radius:14px;padding:14px;max-width:520px;width:100%;margin-top:20px}
 .chips{display:flex;gap:6px;flex-wrap:wrap}.chip{border:1px solid var(--line);background:#fff;border-radius:99px;padding:6px 12px;font:inherit;font-size:13px;cursor:pointer}.chip.on{background:var(--g);color:#fff;border-color:var(--g)}
+
+/* ===== Refonte visuelle (inspirée de CSW Gestion) ===== */
+:root{--sh:0 1px 2px #0e4a3210,0 6px 18px #0e4a3214;--sh2:0 2px 4px #0e4a3214,0 12px 28px #0e4a3222}
+body{background:radial-gradient(1200px 500px at 85% -10%,#dcebe1 0,transparent 60%),radial-gradient(900px 500px at -10% 10%,#f3ead0 0,transparent 55%),linear-gradient(180deg,#eef4ef,#f6f8f5);background-attachment:fixed;font-family:"Segoe UI","Noto Sans Arabic",Tahoma,system-ui,-apple-system,Arial,sans-serif}
+header{background:rgba(255,255,255,.82);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);color:var(--g);box-shadow:0 1px 0 var(--line),0 6px 20px #0e4a3212}
+header h1{font-size:19px;font-weight:800;letter-spacing:.2px}header .sub{color:var(--mut);opacity:1}
+header .btn{background:#eef4ef;border-color:transparent;color:var(--g);border-radius:99px}
+.flag{height:3px}
+#sbar{background:rgba(234,241,236,.7);border-bottom:none;padding:10px 12px}#sbar select{border-radius:99px;background:#fff;box-shadow:var(--sh);border-color:transparent;padding:10px 14px}
+nav{background:transparent;border-bottom:none;padding:12px 12px 4px;gap:8px;top:62px;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}
+nav button{border-radius:99px;border-color:transparent;background:#fff;box-shadow:var(--sh);padding:11px 14px;transition:.15s;white-space:nowrap}
+nav button:hover{transform:translateY(-1px);box-shadow:var(--sh2);color:var(--g)}
+nav button.on{background:linear-gradient(135deg,var(--g),var(--g2));box-shadow:0 6px 16px #0e4a3240;color:#fff}
+.card{border-radius:18px;border-color:#e3ece5;box-shadow:var(--sh);padding:16px}
+.card h2{display:flex;align-items:center;gap:8px;font-size:17px}.card h2:before{content:"";width:5px;height:18px;border-radius:3px;background:linear-gradient(var(--gold),#c79a15)}
+details.card>summary:before{content:"";width:5px;height:18px;border-radius:3px;background:linear-gradient(var(--gold),#c79a15);margin-inline-end:8px}details.card>summary{justify-content:flex-start}details.card>summary:after{margin-inline-start:auto}
+input[type=text],input[type=tel],input[type=number],input[type=date],select{border-radius:12px;background:#fbfdfb;transition:border-color .15s,box-shadow .15s}
+input:focus,select:focus{outline:none;border-color:var(--g2);box-shadow:0 0 0 3px #1f5c3a26}
+.btn{border-radius:12px;transition:.15s;box-shadow:0 1px 2px #0e4a3210}.btn:hover{transform:translateY(-1px);box-shadow:var(--sh)}.btn:active{transform:none}
+.btn.p{background:linear-gradient(135deg,var(--g2),var(--g));box-shadow:0 4px 12px #0e4a3236}
+.btn.gold{background:linear-gradient(135deg,#f0c640,var(--gold));box-shadow:0 4px 12px #deb02840}
+.chip{background:#fff;box-shadow:var(--sh);border-color:transparent}.chip.on{background:linear-gradient(135deg,var(--g2),var(--g))}
+.tp{border-radius:16px;box-shadow:var(--sh);border-color:transparent;transition:.15s}.tp:hover{transform:translateY(-2px);box-shadow:var(--sh2)}.tp.on{border-color:var(--g);box-shadow:0 0 0 3px #0e4a3226,var(--sh2)}
+.stats div{background:linear-gradient(180deg,#f4f9f5,#e9f2ec);border:1px solid #dcebe1;border-radius:14px;padding:10px 2px}.stats b{font-size:20px}
+.stu{border-radius:12px;padding:8px 6px;transition:background .12s}.stu:hover{background:#f1f7f3}
+.ph{border-radius:50%}
+.modal{backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px);background:#0e1d1599}.modal .box{border-radius:20px;box-shadow:0 20px 50px #0006}
+.toast{border-radius:99px;box-shadow:var(--sh2);padding:11px 20px}
+.note{border-radius:14px}
+.imt{border-radius:14px;background:#fff}
+@media(prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
 </head>
 <body>
@@ -3055,7 +3086,7 @@ async function saveBlob(name,blob){
 const SAMPLE={id:"smp",nom:"Aminata Traoré",classe:"6ème A",mat:"CSA-2026-001",naissance:"2012-03-12",lieu:"Bamako",domicile:"Badalabougou",tel:"+223 70 00 00 00",photo:""};
 async function thumbs(){const keep=CFG.tpl;await prep([SAMPLE]);$$("#tpls .tp").forEach(el=>{CFG.tpl=el.dataset.tp;const cv=cardCanvas(SAMPLE,.55);cv.style.boxShadow="none";const h=el.querySelector(".tpc");h.innerHTML="";h.appendChild(cv)});CFG.tpl=keep}
 function setTitles(){document.documentElement.lang=LANG;document.documentElement.dir=LANG==="ar"?"rtl":"ltr";$("#ttl").textContent=T("Cartes scolaires","بطاقات التلاميذ");$("#stt").textContent=T("Pour n'importe quelle école · fonctionne sans internet","لأي مدرسة · يعمل بدون إنترنت");
- $("#nav").innerHTML=[["school",T("1. École","١. المدرسة")],["students",T("2. Élèves","٢. التلاميذ")+" ("+ST.length+")"],["print",T("3. Aperçu & PDF","٣. المعاينة وPDF")],["verify",T("4. Vérifier","٤. تحقق")]].map(([k,l])=>`<button data-t="${k}" class="${TAB===k?"on":""}">${l}</button>`).join("");$$("#nav [data-t]").forEach(b=>b.onclick=()=>{TAB=b.dataset.t;render()})}
+ $("#nav").innerHTML=[["school","🏫 "+T("1. École","١. المدرسة")],["students","👥 "+T("2. Élèves","٢. التلاميذ")+" ("+ST.length+")"],["print","🖨️ "+T("3. Aperçu & PDF","٣. المعاينة وPDF")],["verify","✅ "+T("4. Vérifier","٤. تحقق")]].map(([k,l])=>`<button data-t="${k}" class="${TAB===k?"on":""}">${l}</button>`).join("");$$("#nav [data-t]").forEach(b=>b.onclick=()=>{TAB=b.dataset.t;render()})}
 function render(){schoolBar();setTitles();instBtn();const ib=$("#inst");if(ib)ib.onclick=async()=>{if(DP){DP.prompt();await DP.userChoice;DP=null;ib.style.display="none"}else toast(T("iPhone : bouton Partager ⬆ puis « Sur l'écran d'accueil »","آيفون: زر المشاركة ⬆ ثم «إضافة إلى الشاشة الرئيسية»"))};stopScan();if(TAB==="school"&&needWiz())vWizard();else({school:vSchool,students:vStudents,print:vPrint,verify:vVerify})[TAB]();if(TAB!=="verify"&&!(TAB==="school"&&needWiz()))demoBar();window.scrollTo(0,0)}
 function imgField(id,lab,val){return `<div class="imt"><label class="l">${lab}</label>${val?`<img id="${id}_i" src="${val}">`:`<img id="${id}_i" style="visibility:hidden">`}<div><label class="btn">${val?"✎ ":"📁 "}${T("Choisir","اختيار")}<input type="file" accept="image/*" id="${id}" style="display:none"></label>${val?` <button class="btn r" data-rm="${id}" style="padding:6px 8px;font-size:12px">✕</button>`:""}</div></div>`}
 function vSchool(){const c=CFG;$("#app").innerHTML=`
@@ -3327,7 +3358,7 @@ window.addEventListener("beforeinstallprompt",e=>{e.preventDefault();DP=e;instBt
  window.addEventListener("beforeinstallprompt",()=>setTimeout(bar,400));window.addEventListener("appinstalled",()=>{const d=$("#ibar");if(d)d.remove()});setTimeout(bar,1500);
  document.addEventListener("pointerup",async()=>{if(!ok()||!DP||g("autoinst"))return;st("autoinst","1");const d=DP;try{d.prompt();await d.userChoice;DP=null;const b=$("#ibar");if(b)b.remove()}catch(e){}},{once:true})})();
 window.addEventListener("appinstalled",()=>{DP=null;const b=$("#inst");if(b)b.style.display="none";toast(T("Application installée","تم تثبيت التطبيق"))});
-const BUILD="8d2b5f31";
+const BUILD="9e3c6a42";
 (function(){if(!/^https?:/.test(location.protocol)||window.AndroidBridge)return;let busy=false;async function chk(){if(busy)return;busy=true;try{const base=location.href.replace(/[#?].*$/,"").replace(/[^/]*$/,"");const t=await(await fetch(base+"index.html?v="+Date.now(),{cache:"no-store"})).text();const m=t.match(/const BUILD="(\w+)"/);if(m&&m[1]!==BUILD){try{if(window.caches)for(const k of await caches.keys())await caches.delete(k)}catch(e){}try{toast(T("Mise à jour installée…","تم تحديث التطبيق…"))}catch(e){}const go=()=>{if(document.querySelector(".modal")||(document.activeElement&&/INPUT|TEXTAREA/.test(document.activeElement.tagName))){setTimeout(go,3000);return}location.reload()};setTimeout(go,900);return}}catch(e){}busy=false}
  setTimeout(chk,4000);document.addEventListener("visibilitychange",()=>{if(!document.hidden)chk()});setInterval(chk,600000)})();
 if("serviceWorker" in navigator&&/^https?:/.test(location.protocol)){let skip=!navigator.serviceWorker.controller,rl=false;navigator.serviceWorker.addEventListener("controllerchange",()=>{if(skip){skip=false;return}if(rl)return;rl=true;try{toast(T("Mise à jour installée…","تم تحديث التطبيق…"))}catch(e){}const go=()=>{if(document.querySelector(".modal")||(document.activeElement&&/INPUT|TEXTAREA/.test(document.activeElement.tagName))){setTimeout(go,3000);return}location.reload()};setTimeout(go,900)});navigator.serviceWorker.register("sw.js").then(r=>{const sk=w=>{if(w&&navigator.serviceWorker.controller)w.postMessage("SKIP")};sk(r.waiting);r.addEventListener("updatefound",()=>{const w=r.installing;if(w)w.addEventListener("statechange",()=>{if(w.state==="installed")sk(w)})});r.update();document.addEventListener("visibilitychange",()=>{if(!document.hidden)r.update()})}).catch(()=>{})}
